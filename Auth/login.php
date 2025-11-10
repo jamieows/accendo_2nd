@@ -11,6 +11,7 @@ $logo_candidates = [
   '../Admin/uploads/accendo_logo.png',
 ];
 $logo_rel = null;
+$logo_exists = false;
 foreach ($logo_candidates as $cand) {
   $abs_path = __DIR__ . '/' . $cand;
   if (file_exists($abs_path) && is_file($abs_path)) {
