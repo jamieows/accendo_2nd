@@ -12,14 +12,15 @@ $hasActivityTable = (bool) $tblStmt->fetchColumn();
 
 if ($hasActivityTable) {
     // Return latest 200 events
-    $q = "SELECT actor_name, action, target, details, created_at FROM activity_logs ORDER BY created_at DESC LIMIT 200";
+    $q = "SELECT id, actor_name, action, target, details, created_at FROM activity_logs ORDER BY created_at DESC LIMIT 200";
     $s = $pdo->query($q);
     $rows = $s->fetchAll();
 } else {
     // Fallback: return recent user registrations as 'create' events
-    $s = $pdo->query("SELECT first_name, last_name, username, created_at FROM users ORDER BY created_at DESC LIMIT 200");
+    $s = $pdo->query("SELECT id, first_name, last_name, username, created_at FROM users ORDER BY created_at DESC LIMIT 200");
     while ($u = $s->fetch()) {
         $rows[] = [
+            'id' => 'user_' . ($u['id'] ?? ''),
             'actor_name' => $u['first_name'] . ' ' . $u['last_name'],
             'action' => 'create',
             'target' => 'user_account',
@@ -37,6 +38,10 @@ foreach ($rows as &$r) {
         $r['created_at'] = $dt->format('M j, Y g:i A');
     } catch (Exception $e) {
         // leave as-is
+    }
+    // ensure every row has an id for client-side diffing
+    if (empty($r['id'])) {
+        $r['id'] = md5(($r['actor_name'] ?? '') . '|' . ($r['action'] ?? '') . '|' . ($r['target'] ?? '') . '|' . ($r['details'] ?? '') . '|' . ($r['created_at'] ?? ''));
     }
 }
 

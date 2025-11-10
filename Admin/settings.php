@@ -32,6 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   .modal h3 { margin:0 0 6px 0; font-size:1.05rem; }
   .modal p { margin:0; color: #6B7280; }
   .modal .close-btn { background:transparent;border:none;font-size:1.25rem;cursor:pointer;color:var(--text);position:absolute;right:8px;top:6px; }
+  /* Highlight for newly arrived activity rows */
+  .new-activity { background: rgba(124, 58, 237, 0.08); transition: background-color 0.6s ease; }
 </style>
 
 <div class="card">
@@ -209,33 +211,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const inl = document.getElementById('inline-notice'); if (inl) inl.style.display = 'none';
       }
 
-    // Start realtime activity polling (unchanged)
+    // Start realtime activity polling with new-item detection and highlight
     const activityTableBody = document.querySelector('#activity-table-body');
+    const seenIds = new Set();
+
+    function createRow(r, markNew = false) {
+      const tr = document.createElement('tr');
+      if (r.id) tr.dataset.id = r.id;
+      const tdTime = document.createElement('td'); tdTime.textContent = r.created_at || '';
+      const tdActor = document.createElement('td'); tdActor.textContent = r.actor_name || 'System';
+      const tdAction = document.createElement('td'); tdAction.textContent = r.action || '';
+      const tdTarget = document.createElement('td'); tdTarget.textContent = r.target || '';
+      const tdDetails = document.createElement('td'); tdDetails.textContent = r.details || '';
+      tr.appendChild(tdTime);
+      tr.appendChild(tdActor);
+      tr.appendChild(tdAction);
+      tr.appendChild(tdTarget);
+      tr.appendChild(tdDetails);
+      if (markNew) {
+        tr.classList.add('new-activity');
+        // remove highlight after 3s
+        setTimeout(()=> tr.classList.remove('new-activity'), 3000);
+      }
+      return tr;
+    }
+
+    let initialLoad = true;
     async function fetchActivity() {
       try {
         const res = await fetch('api/activity_logs.php');
         if (!res.ok) throw new Error('Network response was not ok');
         const json = await res.json();
-        if (activityTableBody) {
+        if (!activityTableBody) return;
+
+        if (initialLoad) {
+          // render full list and mark seen ids
           activityTableBody.innerHTML = '';
           json.forEach(r => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${r.created_at}</td>
-              <td>${(r.actor_name || 'System')}</td>
-              <td>${(r.action || '')}</td>
-              <td>${(r.target || '')}</td>
-              <td>${(r.details || '')}</td>
-            `;
-            activityTableBody.appendChild(tr);
+            if (r.id) seenIds.add(r.id);
+            activityTableBody.appendChild(createRow(r, false));
           });
+          initialLoad = false;
+        } else {
+          // detect new items (those with ids not seen before)
+          const newItems = [];
+          for (const r of json) {
+            if (r.id && !seenIds.has(r.id)) {
+              newItems.push(r);
+            }
+          }
+          if (newItems.length) {
+            // prepend in chronological order (newest first in feed)
+            newItems.reverse().forEach(r => {
+              const tr = createRow(r, true);
+              activityTableBody.insertBefore(tr, activityTableBody.firstChild);
+              if (r.id) seenIds.add(r.id);
+            });
+            // keep table length reasonable
+            while (activityTableBody.children.length > 200) activityTableBody.removeChild(activityTableBody.lastChild);
+          }
         }
       } catch (e) {
         console.error('Failed to fetch activity', e);
       }
     }
     fetchActivity();
-    setInterval(fetchActivity, 8000);
+    // poll faster for near-real-time updates
+    setInterval(fetchActivity, 4000);
   })();
 </script>
 
