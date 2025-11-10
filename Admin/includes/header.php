@@ -36,7 +36,9 @@
     .navbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     .logo { font-weight: 700; font-size: 1.5rem; color: var(--primary); }
     .nav-links a { margin: 0 1rem; color: var(--text); text-decoration: none; font-weight: 500; }
-    .nav-links a:hover { color: var(--primary); }
+  .nav-links a:hover { color: var(--primary); }
+  /* Active/selected tab styling */
+  .nav-links a.active { color: var(--primary); font-weight: 600; border-bottom: 2px solid var(--primary); padding-bottom: 3px; }
     .user-menu { position: relative; }
     .user-avatar { width: 40px; height: 40px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; }
     .dropdown { display: none; position: absolute; right: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; width: 200px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; }
@@ -104,10 +106,33 @@
     </div>
   </nav>
 
-  <div class="container">ssets/css/admin.css">
+  <div class="container">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="../assets/js/global.js" defer></script>
   <script src="../assets/js/admin.js" defer></script>
+  <script>
+    // Small helper: mark current nav link active based on URL and on click
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        const links = Array.from(document.querySelectorAll('.nav-links a'));
+        if (!links.length) return;
+        const current = (location.pathname || '').split('/').pop();
+        links.forEach(a => {
+          const href = (a.getAttribute('href') || '').split('/').pop();
+          if (href && current && href === current) a.classList.add('active');
+          a.addEventListener('click', function() {
+            links.forEach(x => x.classList.remove('active'));
+            this.classList.add('active');
+          });
+        });
+        // Add lightweight page marker classes so we can apply page-specific CSS
+        try {
+          if (current === 'manage_users.php') document.documentElement.classList.add('page-manage-users');
+          if (current === 'manage_courses.php') document.documentElement.classList.add('page-manage-courses');
+        } catch (e) { /* silent */ }
+      } catch (e) { /* silent */ }
+    });
+  </script>
 </head>
 <body>
   <header class="admin-header">

@@ -21,7 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Load saved dark mode
-    if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+    // Prefer new admin_theme key if present (values: 'light'|'dark'|'system')
+    const adminTheme = localStorage.getItem('admin_theme');
+    if (adminTheme) {
+        if (adminTheme === 'dark') document.documentElement.classList.add('dark-mode');
+        else if (adminTheme === 'light') document.documentElement.classList.remove('dark-mode');
+        else if (adminTheme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark-mode');
+    } else if (localStorage.getItem('darkMode') === 'true') {
+        // fallback for older flag
+        document.documentElement.classList.add('dark-mode');
+    }
 
     // NLP volume display
     const vol = document.getElementById('nlp-volume');

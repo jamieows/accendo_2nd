@@ -97,3 +97,38 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Moved here from Admin/includes/header.php: small header title sizing and page-specific table spacing */
+.admin-header span {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+.page-manage-users .table-responsive,
+.page-manage-courses .table-responsive {
+  margin-top: 20px;
+}
+
+/* Buttons on Manage Users / Manage Courses: spacing + slightly larger controls for clarity */
+.page-manage-users .btn,
+.page-manage-courses .btn {
+  margin-top: 12px;
+  margin-bottom: 12px; /* space between buttons and tables */
+  margin-right: 8px;   /* small gap when buttons are inline */
+  font-size: 0.95rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+}
+
+/* If buttons are grouped (action rows), provide a little separation from tables */
+.page-manage-users .action-row,
+.page-manage-courses .action-row {
+  margin-top: 10px;
+}
+/* Ensure a comfortable gap between buttons and adjacent dropdowns (both orders) */
+.page-manage-users .btn + .dropdown,
+.page-manage-courses .btn + .dropdown,
+.page-manage-users .dropdown + .btn,
+.page-manage-courses .dropdown + .btn {
+  margin-left: 8px;
+}
