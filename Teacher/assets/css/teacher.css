@@ -1,0 +1,48 @@
+/* Teacher/assets/css/teacher.css */
+.upload-area {
+    border: 3px dashed #D1D5DB;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    background: #F9FAFB;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.upload-area.dragover {
+    border-color: var(--primary);
+    background: #EBE1FF;
+}
+
+.upload-area i {
+    font-size: 3rem;
+    color: #9CA3AF;
+    margin-bottom: 10px;
+}
+
+.file-list {
+    margin-top: 20px;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.assignment-card {
+    border-left: 5px solid var(--primary);
+    padding-left: 15px;
+}
+
+.due-soon { border-left-color: #F59E0B; }
+.due-over { border-left-color: #EF4444; }
+
+/* Dark mode */
+.dark-mode .upload-area { background: #1F2937; border-color: #374151; }
+.dark-mode .file-item { background: #162447; }
