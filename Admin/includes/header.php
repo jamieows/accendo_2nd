@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="../../assets/css/global.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
   <style>
     :root {
       --primary: #7B61FF;
@@ -34,7 +35,7 @@
     }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; }
     .navbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .logo { font-weight: 700; font-size: 1.5rem; color: var(--primary); }
+    .logo { font-weight: 700; font-size: 2.5rem; color: var(--primary); }
     .nav-links a { margin: 0 1rem; color: var(--text); text-decoration: none; font-weight: 500; }
   .nav-links a:hover { color: var(--primary); }
   /* Active/selected tab styling */

@@ -112,9 +112,9 @@
 /* Buttons on Manage Users / Manage Courses: spacing + slightly larger controls for clarity */
 .page-manage-users .btn,
 .page-manage-courses .btn {
-  margin-top: 12px;
-  margin-bottom: 12px; /* space between buttons and tables */
-  margin-right: 8px;   /* small gap when buttons are inline */
+  margin-top: 12px;         /* vertical gap above button */
+  margin-bottom: 12px;      /* vertical gap below button (separates from tables) */
+  margin-right: 8px;        /* small horizontal gap when buttons are inline */
   font-size: 0.95rem;
   padding: 0.55rem 0.9rem;
   border-radius: 8px;
@@ -125,7 +125,8 @@
 .page-manage-courses .action-row {
   margin-top: 10px;
 }
-/* Ensure a comfortable gap between buttons and adjacent dropdowns (both orders) */
+
+/* Comfortable gap between buttons and adjacent dropdowns (both orders) */
 .page-manage-users .btn + .dropdown,
 .page-manage-courses .btn + .dropdown,
 .page-manage-users .dropdown + .btn,
