@@ -1,10 +1,14 @@
 <?php
 // config/db.php
 // Accendo LMS - Core Configuration (PH Ready)
-// Time: November 10, 2025 11:08 AM PHT
+// Time: November 11, 2025 03:24 PM PST (PH Time: November 12, 2025 07:24 AM PHT)
 
 date_default_timezone_set('Asia/Manila');   // Philippines Standard Time
-session_start();
+
+// === FIX: Start session only if not already active ===
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // TEMP: show all errors while debugging (remove/disable in production)
 ini_set('display_errors', '1');
@@ -33,7 +37,7 @@ try {
     die("Database connection failed: " . htmlspecialchars($e->getMessage()));
 }
 
-// === SECURITY: Regenerate session ID on login ===
+// === SECURITY: Regenerate session ID on first login ===
 if (isset($_SESSION['user_id']) && !isset($_SESSION['initiated'])) {
     session_regenerate_id(true);
     $_SESSION['initiated'] = true;
