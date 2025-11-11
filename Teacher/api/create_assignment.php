@@ -1,14 +1,19 @@
 <?php
 require_once '../../config/db.php';
-if($_SESSION['role']!=='teacher') die();
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
+    header('Location: ../../Auth/login.php'); exit;
+}
 
-if($_SERVER['REQUEST_METHOD']==='POST'){
-    $stmt = $pdo->prepare("INSERT INTO assignments (teacher_id,subject_id,title,description,due_date) VALUES (?,?,?,?,?)");
-    $stmt->execute([$_SESSION['user_id'],$_POST['subject_id'],$_POST['title'],$_POST['description'],$_POST['due_date']]);
-}
-if(isset($_GET['delete'])){
+$uid = (int)$_SESSION['user_id'];
+
+// handle delete
+if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    $pdo->prepare("DELETE FROM assignments WHERE id=? AND teacher_id=?")->execute([$id,$_SESSION['user_id']]);
-}
-header("Location: ../assignments.php");
-?>
+    // delete record and any uploaded file
+    $stmt = $pdo->prepare("SELECT file_path FROM assignments WHERE id = ? AND teacher_id = ?");
+    $stmt->execute([$id, $uid]);
+    $fp = $stmt->fetchColumn();
+    $pdo->prepare("DELETE FROM assignments WHERE id = ? AND teacher_id = ?")->execute([$id, $uid]);
+    if ($fp) {
+        $path = dirname(__DIR__,2) . DIRECTORY_SEPARATOR . ltrim($fp, "/\\");
