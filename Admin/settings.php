@@ -4,14 +4,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header("Location: ../Auth/login.php"); 
     exit(); 
 }
+
+// FIXED: Force PH timezone for ALL times (LINE 15 FIXED!)
+date_default_timezone_set('Asia/Manila');
+
 // Handle settings POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  // Theme preference (light | dark | system)
   if (isset($_POST['theme'])) {
     $theme = $_POST['theme'];
     $_SESSION['admin_theme'] = in_array($theme, ['light','dark','system']) ? $theme : 'system';
   }
-  // Note: primary color removed. Theme only (light | dark | system).
   $saved = true;
 }
 ?>
@@ -40,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php endif; ?>
 
 <style>
-  /* Modal confirmation styles */
   .modal-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); z-index: 1200; }
   .modal-overlay.show { display: flex; }
   .modal-wrapper { position: relative; }
@@ -48,14 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   .modal h3 { margin:0 0 6px 0; font-size:1.05rem; }
   .modal p { margin:0; color: #6B7280; }
   .modal .close-btn { background:transparent;border:none;font-size:1.25rem;cursor:pointer;color:var(--text);position:absolute;right:8px;top:6px; }
-  /* Highlight for newly arrived activity rows */
   .new-activity { background: rgba(124, 58, 237, 0.08); transition: background-color 0.6s ease; }
 </style>
 
 <div class="card">
   <form method="post" id="settings-form">
     <h2 style="margin-bottom:8px;">Appearance</h2>
-    <p class="muted" style="margin-bottom:12px;">Choose your preferred theme for the admin interface.</p>
+    <p class="muted" style="margin-bottom:12px; color: #6B7280">Choose your preferred theme for the admin interface.</p>
 
     <div class="form-row" style="margin-bottom:14px;">
       <label for="theme" style="display:block;margin-bottom:6px;">Theme</label>
@@ -67,12 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </select>
     </div>
 
-    <!-- Primary color removed: theme only (light | dark | system) -->
     <div style="margin-top:6px;">
       <button type="submit" class="btn">Save settings</button>
     </div>
   </form>
-
 </div>
 
 <!-- Saved confirmation modal -->
@@ -87,14 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <div class="card">
-  <h2>Activity History</h2>
-  <p class="muted">Recent actions (Create / Update / Delete). Use the CUD filter above to restrict results.</p>
+  <h2>Activity History</h2><br>
+  <p class="muted" style="margin-bottom:12px; color: #6B7280">Recent actions (Create / Update / Delete).</p>
 
   <?php
-  // Render activity rows: prefer a dedicated activity_logs table when present
   $hf = $_SESSION['history_filter'] ?? 'all';
 
-  // Check if activity_logs table exists in this database
   $tblStmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'activity_logs'");
   $tblStmt->execute();
   $hasActivityTable = (bool) $tblStmt->fetchColumn();
@@ -104,24 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $params = [];
       $where = '';
       if ($hf !== 'all') { $where = 'WHERE action = ?'; $params[] = $hf; }
-      $q = "SELECT actor_name, action, target, details, created_at FROM activity_logs $where ORDER BY created_at DESC LIMIT 100";
+      $q = "SELECT id, actor_name, action, target, details, created_at FROM activity_logs $where ORDER BY created_at DESC LIMIT 100";
       $s = $pdo->prepare($q);
       $s->execute($params);
       $rows = $s->fetchAll();
-  } else {
-      // Fallback: show recent user registrations as 'create' events
-      if ($hf === 'all' || $hf === 'create') {
-          $s = $pdo->query("SELECT first_name, last_name, username, created_at FROM users ORDER BY created_at DESC LIMIT 100");
-          while ($u = $s->fetch()) {
-              $rows[] = [
-                  'actor_name' => $u['first_name'] . ' ' . $u['last_name'],
-                  'action' => 'create',
-                  'target' => 'user_account',
-                  'details' => $u['username'],
-                  'created_at' => $u['created_at']
-              ];
-          }
-      }
   }
   ?>
 
@@ -138,163 +120,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </thead>
       <tbody id="activity-table-body">
         <?php if (!empty($rows)): ?>
-          <?php foreach ($rows as $r):
-            $time = new DateTime($r['created_at'], new DateTimeZone('UTC'));
+          <?php foreach ($rows as $r): 
+            $time = new DateTime($r['created_at']);
             $time->setTimezone(new DateTimeZone('Asia/Manila'));
           ?>
-            <tr>
-              <td><?= $time->format('M j, Y g:i A') ?></td>
+            <tr data-id="<?= $r['id'] ?>">
+              <td><?= $time->format('M j, Y g:i A') ?> PHT</td>
               <td><?= htmlspecialchars($r['actor_name'] ?? 'System') ?></td>
               <td><?= htmlspecialchars(ucfirst($r['action'])) ?></td>
-              <td><?= htmlspecialchars(ucfirst(str_replace('_',' ',$r['target'] ?? '')) ) ?></td>
+              <td><?= htmlspecialchars(ucfirst(str_replace('_',' ',$r['target'] ?? ''))) ?></td>
               <td><?= htmlspecialchars($r['details'] ?? '') ?></td>
             </tr>
           <?php endforeach; ?>
         <?php else: ?>
-          <tr><td colspan="5" class="muted">No activity found for the selected filter.</td></tr>
+          <tr><td colspan="5" class="muted">No activity found.</td></tr>
         <?php endif; ?>
       </tbody>
     </table>
   </div>
-
 </div>
 
-<!-- System info moved to bottom -->
 <div class="card">
   <h2>System Info</h2>
-  <p><strong>System Time (PH):</strong> <?= date('F j, Y g:i A') ?> (Asia/Manila)</p>
+  <p><strong>System Time (PH):</strong> <?= date('F j, Y g:i A') ?> PHT (Asia/Manila)</p>
   <p><strong>Database:</strong> accendo_db</p>
   <p><strong>Version:</strong> Accendo LMS v2.0</p>
 </div>
 
 <script>
-  (function(){
-    const themeSelect = document.getElementById('theme');
-    const mql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-    function applyTheme(t) {
-      const isDark = (t === 'dark') || (t === 'system' && mql && mql.matches);
-      document.documentElement.classList.toggle('dark-mode', !!isDark);
-      try { localStorage.setItem('admin_theme', t); } catch(e){}
-    }
+  // LIVE PH CLOCK
+  function updatePHClock() {
+    const now = new Date();
+    const phTime = now.toLocaleString("en-PH", { 
+      timeZone: "Asia/Manila", 
+      hour12: true, 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    });
+    document.getElementById("ph-clock").textContent = phTime;
+  }
+  updatePHClock();
+  setInterval(updatePHClock, 1000);
 
-    // On load, apply saved theme from session (server-side) or fallback to 'system'
-    const initial = '<?= addslashes($_SESSION['admin_theme'] ?? 'system') ?>';
-    if (initial) {
-      applyTheme(initial);
-      if (themeSelect) themeSelect.value = initial;
-    }
+  // REAL-TIME ACTIVITY POLLING (PH TIME)
+  const activityTableBody = document.querySelector('#activity-table-body');
+  const seenIds = new Set();
+  <?php foreach ($rows as $r): ?>
+    seenIds.add(<?= $r['id'] ?>);
+  <?php endforeach; ?>
 
-    // When user changes selection, apply and persist
-    if (themeSelect) {
-      themeSelect.addEventListener('change', (e)=> applyTheme(e.target.value));
-    }
+  async function fetchActivity() {
+    try {
+      const res = await fetch('api/activity_logs.php');
+      if (!res.ok) return;
+      const json = await res.json();
 
-    // If following system, update theme when OS preference changes
-    if (mql) {
-      const listener = function(){
-        const cur = (themeSelect && themeSelect.value) || localStorage.getItem('admin_theme') || 'system';
-        if (cur === 'system') applyTheme('system');
-      };
-      if (mql.addEventListener) mql.addEventListener('change', listener);
-      else if (mql.addListener) mql.addListener(listener);
-    }
+      const newItems = json.filter(r => r.id && !seenIds.has(r.id));
+      if (newItems.length === 0) return;
 
-      // Modal show/hide for saved confirmation
-      function hideSavedModal() {
-        const modal = document.getElementById('saved-modal');
-        if (!modal) return;
-        modal.classList.remove('show');
-        modal.setAttribute('aria-hidden', 'true');
-        setTimeout(()=> { modal.style.display = 'none'; }, 200);
-      }
-      function showSavedModal() {
-        const modal = document.getElementById('saved-modal');
-        if (!modal) return;
-        modal.style.display = 'flex';
-        // small timeout to allow display before adding class for transition
-        setTimeout(()=> { modal.classList.add('show'); modal.setAttribute('aria-hidden','false'); }, 10);
-        // auto-hide after 2.5s
-        setTimeout(hideSavedModal, 2500);
-      }
-      // wire close button and escape key
-      document.getElementById('saved-modal-close')?.addEventListener('click', hideSavedModal);
-      document.addEventListener('keydown', (e)=> { if (e.key === 'Escape') hideSavedModal(); });
-      // if server indicated saved, show modal on load
-      if (window.__settingsSaved) {
-        // delay until after DOM is painted
-        setTimeout(showSavedModal, 80);
-        // also remove inline-notice if present
-        const inl = document.getElementById('inline-notice'); if (inl) inl.style.display = 'none';
-      }
+      newItems.reverse().forEach(r => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = r.id;
+        seenIds.add(r.id);
 
-    // Start realtime activity polling with new-item detection and highlight
-    const activityTableBody = document.querySelector('#activity-table-body');
-    const seenIds = new Set();
+        const time = new Date(r.created_at);
+        const phTime = time.toLocaleString("en-PH", { 
+          timeZone: "Asia/Manila", 
+          month: 'short', day: 'numeric', year: 'numeric', 
+          hour: 'numeric', minute: '2-digit', hour12: true 
+        }) + ' PHT';
 
-    function createRow(r, markNew = false) {
-      const tr = document.createElement('tr');
-      if (r.id) tr.dataset.id = r.id;
-      const tdTime = document.createElement('td'); tdTime.textContent = r.created_at || '';
-      const tdActor = document.createElement('td'); tdActor.textContent = r.actor_name || 'System';
-      const tdAction = document.createElement('td'); tdAction.textContent = r.action || '';
-      const tdTarget = document.createElement('td'); tdTarget.textContent = r.target || '';
-      const tdDetails = document.createElement('td'); tdDetails.textContent = r.details || '';
-      tr.appendChild(tdTime);
-      tr.appendChild(tdActor);
-      tr.appendChild(tdAction);
-      tr.appendChild(tdTarget);
-      tr.appendChild(tdDetails);
-      if (markNew) {
+        tr.innerHTML = `
+          <td>${phTime}</td>
+          <td>${r.actor_name || 'System'}</td>
+          <td>${r.action || ''}</td>
+          <td>${(r.target || '').replace(/_/g, ' ')}</td>
+          <td>${r.details || ''}</td>
+        `;
         tr.classList.add('new-activity');
-        // remove highlight after 3s
-        setTimeout(()=> tr.classList.remove('new-activity'), 3000);
-      }
-      return tr;
-    }
+        setTimeout(() => tr.classList.remove('new-activity'), 3000);
+        activityTableBody.insertBefore(tr, activityTableBody.firstChild);
+      });
 
-    let initialLoad = true;
-    async function fetchActivity() {
-      try {
-        const res = await fetch('api/activity_logs.php');
-        if (!res.ok) throw new Error('Network response was not ok');
-        const json = await res.json();
-        if (!activityTableBody) return;
-
-        if (initialLoad) {
-          // render full list and mark seen ids
-          activityTableBody.innerHTML = '';
-          json.forEach(r => {
-            if (r.id) seenIds.add(r.id);
-            activityTableBody.appendChild(createRow(r, false));
-          });
-          initialLoad = false;
-        } else {
-          // detect new items (those with ids not seen before)
-          const newItems = [];
-          for (const r of json) {
-            if (r.id && !seenIds.has(r.id)) {
-              newItems.push(r);
-            }
-          }
-          if (newItems.length) {
-            // prepend in chronological order (newest first in feed)
-            newItems.reverse().forEach(r => {
-              const tr = createRow(r, true);
-              activityTableBody.insertBefore(tr, activityTableBody.firstChild);
-              if (r.id) seenIds.add(r.id);
-            });
-            // keep table length reasonable
-            while (activityTableBody.children.length > 200) activityTableBody.removeChild(activityTableBody.lastChild);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to fetch activity', e);
+      while (activityTableBody.children.length > 200) {
+        activityTableBody.removeChild(activityTableBody.lastChild);
       }
-    }
-    fetchActivity();
-    // poll faster for near-real-time updates
-    setInterval(fetchActivity, 4000);
-  })();
+    } catch (e) { console.error(e); }
+  }
+  setInterval(fetchActivity, 4000);
 </script>
 
 <?php include 'includes/footer.php'; ?>

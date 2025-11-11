@@ -19,7 +19,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     <div class="stat-value" id="total-users">
       <?php echo $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn(); ?>
     </div>
-    <div class="stat-label">Total Users</div>
+    <div class="stat-label">Total User/s</div>
   </div>
 
   <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
@@ -27,7 +27,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     <div class="stat-value" id="total-teachers">
       <?php echo $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'teacher'")->fetchColumn(); ?>
     </div>
-    <div class="stat-label">Teachers</div>
+    <div class="stat-label">Teacher/s</div>
   </div>
 
   <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
@@ -35,7 +35,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     <div class="stat-value" id="total-students">
       <?php echo $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'student'")->fetchColumn(); ?>
     </div>
-    <div class="stat-label">Students</div>
+    <div class="stat-label">Student/s</div>
   </div>
 
   <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
@@ -43,7 +43,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     <div class="stat-value" id="total-subjects">
       <?php echo $pdo->query("SELECT COUNT(*) FROM subjects")->fetchColumn(); ?>
     </div>
-    <div class="stat-label">Subjects</div>
+    <div class="stat-label">Subject/s</div>
   </div>
 </div>
 
@@ -52,17 +52,20 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
   <a href="manage_users.php" class="action-card">
     <span class="action-icon">Users</span>
     <h3>Manage Users</h3>
-    <p>Add, edit, or remove users</p>
+    <p>Remove users</p>
   </a>
   <a href="manage_courses.php" class="action-card">
     <span class="action-icon">Courses</span>
     <h3>Assign Courses</h3>
     <p>Link teachers to subjects</p>
+    <p>Enroll students in courses</p>
   </a>
   <a href="settings.php" class="action-card">
     <span class="action-icon">Settings</span>
     <h3>System Settings</h3>
     <p>Configure LMS options</p>
+    <p>Manage theme preferences</p>
+    <p>Track Activity History</p>
   </a>
 </div>
 
