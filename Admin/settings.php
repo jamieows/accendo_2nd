@@ -17,7 +17,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <?php include 'includes/header.php'; ?>
 
-<h1>Admin Settings</h1>
+<?php if (!empty($_SESSION['flash_message'])): ?>
+  <div style="position:fixed; top:20px; right:20px; padding:16px 24px; border-radius:12px; color:white; font-weight:600; z-index:9999; box-shadow:0 10px 30px rgba(0,0,0,0.3); background: <?= $_SESSION['flash_type'] === 'warning' ? '#f39c12' : '#27ae60' ?>;">
+    <?= htmlspecialchars($_SESSION['flash_message']) ?>
+    <span style="float:right; cursor:pointer; margin-left:20px;" onclick="this.parentElement.remove()">Close</span>
+  </div>
+  <?php 
+  unset($_SESSION['flash_message']); 
+  unset($_SESSION['flash_type']); 
+  ?>
+  <script>setTimeout(() => document.querySelector('[style*="position:fixed"]')?.remove(), 5000);</script>
+<?php endif; ?>
+
+<div class="page-header">
+  <h1>Admin Settings</h1>
+  <p class="subtitle">Manage admin settings • <?= date('l, F j, Y') ?> • PH Time: <span id="ph-clock"></span></p>
+</div>
+
 <?php if (!empty($saved)): ?>
   <div class="notice" id="inline-notice" style="display:none;">Settings saved.</div>
   <script>window.__settingsSaved = true;</script>
@@ -44,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="form-row" style="margin-bottom:14px;">
       <label for="theme" style="display:block;margin-bottom:6px;">Theme</label>
       <?php $curTheme = $_SESSION['admin_theme'] ?? 'system'; ?>
-      <select id="theme" name="theme" class="input" style="max-width:320px;"> 
+      <select id="theme" name="theme" class="input" style="max-width:500px;"> 
         <option value="system" <?= $curTheme==='system'?'selected':'' ?>>System (follow OS)</option>
         <option value="light" <?= $curTheme==='light'?'selected':'' ?>>Light</option>
         <option value="dark" <?= $curTheme==='dark'?'selected':'' ?>>Dark</option>

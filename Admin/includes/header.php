@@ -35,7 +35,7 @@
     }
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; }
     .navbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .logo { font-weight: 700; font-size: 1.5rem; color: var(--primary); }
+    .logo { font-weight: 700; font-size: 2.5rem; color: var(--primary); }
     .nav-links a { margin: 0 1rem; color: var(--text); text-decoration: none; font-weight: 500; }
   .nav-links a:hover { color: var(--primary); }
   /* Active/selected tab styling */
