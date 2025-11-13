@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
 <?php include 'includes/header.php'; ?>
 
 <style>
-    /* ──────────────────────  SPACING (same as before) ────────────────────── */
+    /* ──────────────────────  SPACING ────────────────────── */
     form.card label,
     .edit-modal label {
         display:block;
@@ -40,6 +40,47 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     }
     table th, table td{ padding:10px 12px; text-align:left; vertical-align:middle; }
 
+    /* ──────────────────────  TEXT VISIBILITY ────────────────────── */
+    form.card select,
+    form.card input,
+    form.card textarea,
+    form.card option,
+    .edit-modal select,
+    .edit-modal input,
+    .edit-modal textarea,
+    .edit-modal option {
+      color: #1f2937;
+    }
+    .dark-mode form.card select,
+    .dark-mode form.card input,
+    .dark-mode form.card textarea,
+    .dark-mode form.card option,
+    .dark-mode .edit-modal select,
+    .dark-mode .edit-modal input,
+    .dark-mode .edit-modal textarea,
+    .dark-mode .edit-modal option {
+      color: #f3f4f6 !important;
+      background: #1e293b !important;
+    }
+
+    /* ──────────────────────  BUTTONS ────────────────────── */
+    .btn-sm {
+        display: inline-block;
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-align: center;
+        border-radius: 6px;
+        text-decoration: none;
+        cursor: pointer;
+        margin: 0 2px;
+        min-width: 44px;
+    }
+    .btn-primary { background: #7B61FF; color: white; }
+    .btn-primary:hover { background: #6a51e6; }
+    .btn-danger { background: #EF4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+
     /* ──────────────────────  MODAL ────────────────────── */
     .modal{
         display:none;
@@ -67,6 +108,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
 
 <h1>Create Assignment</h1>
 
+<?php if (isset($_GET['created'])): ?>
+  <div style="background:#d1fae5; color:#065f46; padding:12px; border-radius:6px; margin-bottom:16px; font-weight:500;">
+    Assignment created successfully!
+  </div>
+<?php endif; ?>
+
 <form action="api/create_assignment.php" method="POST" class="card" enctype="multipart/form-data">
   <label>Subject</label>
   <select name="subject_id" required>
@@ -93,12 +140,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
 </form>
 
 <h2 style="margin-top:30px;">Your Assignments</h2>
+
+<?php if (isset($_GET['deleted'])): ?>
+  <div style="background:#d1fae5; color:#065f46; padding:12px; border-radius:6px; margin-bottom:16px; font-weight:500;">
+    Assignment deleted successfully.
+  </div>
+<?php endif; ?>
+
 <div class="card">
   <table>
     <tr><th>Title</th><th>Subject</th><th>Attachment</th><th>Due</th><th>Action</th></tr>
     <?php
     $stmt = $pdo->prepare("
-        SELECT a.id, a.title, a.description, a.due_date, a.file_path,
+        SELECT a.id, a.title, a.description, a.due_date, a.file_path, a.subject_id,
                s.name AS subject_name
         FROM assignments a
         JOIN subjects s ON a.subject_id = s.id
@@ -109,21 +163,21 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     while($a = $stmt->fetch()){
         $dueClass = (!empty($a['due_date']) && strtotime($a['due_date']) < time()) ? 'due-over' : 'due-soon';
         $attachHtml = $a['file_path']
-            ? '<a href="'.htmlspecialchars($a['file_path']).'" target="_blank">View</a>'
+            ? '<a href="/accendo_2nd/'.htmlspecialchars($a['file_path']).'" target="_blank" class="btn-sm btn-primary">View</a>'
             : '<span style="color:#6b7280">—</span>';
 
         echo "<tr>
-                <td>".htmlspecialchars($a['title'])."</td>
-                <td>".htmlspecialchars($a['subject_name'])."</td>
+                <td>" . htmlspecialchars($a['title']) . "</td>
+                <td>" . htmlspecialchars($a['subject_name']) . "</td>
                 <td>$attachHtml</td>
-                <td class='due-date $dueClass' data-due='".htmlspecialchars($a['due_date'])."'>"
-                  .(empty($a['due_date']) ? '—' : date('M j, Y g:i A', strtotime($a['due_date'])))."
-                </td>
+                <td class='due-date $dueClass' data-due='" . htmlspecialchars($a['due_date']) . "'>"
+                  . (empty($a['due_date']) ? '—' : date('M j, Y g:i A', strtotime($a['due_date']))) .
+                "</td>
                 <td>
-                  <button class='btn btn-primary btn-sm' onclick='openEditModal(".json_encode($a).")'>Edit</button>
-                  <a href='api/create_assignment.php?delete=".urlencode($a['id'])."' 
-                     class='btn btn-danger btn-sm' 
-                     onclick='return confirm(\"Delete assignment?\")'>Delete</a>
+                  <button class='btn-sm btn-primary' onclick='openEditModal(" . json_encode($a) . ")'>Edit</button>
+                  <a href='api/delete_assignment.php?id=" . urlencode($a['id']) . "' 
+                     class='btn-sm btn-danger' 
+                     onclick='return confirm(\"Delete this assignment?\")'>Delete</a>
                 </td>
               </tr>";
     }
@@ -180,7 +234,7 @@ function openEditModal(data){
 
     const fileDiv = document.getElementById('current_file');
     if(data.file_path){
-        fileDiv.innerHTML = `<a href="${data.file_path}" target="_blank">Current file</a>`;
+        fileDiv.innerHTML = `<a href="/accendo_2nd/${data.file_path}" target="_blank">Current file</a>`;
     }else{
         fileDiv.innerHTML = '<span style="color:#6b7280">—</span>';
     }
@@ -194,5 +248,6 @@ function closeEditModal(){
 
 <?php include 'includes/footer.php'; ?>
 <script src="../assets/js/global.js"></script>
+
 </body>
 </html>

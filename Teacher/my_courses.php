@@ -46,9 +46,24 @@ try {
     background:#fff;
   }
 
+  /* ==== TEXT VISIBILITY FIX (light/dark mode) ==== */
+  form.card select,
+  form.card input,
+  form.card textarea,
+  form.card option {
+      color: #1f2937;
+  }
+  .dark-mode form.card select,
+  .dark-mode form.card input,
+  .dark-mode form.card textarea,
+  .dark-mode form.card option {
+      color: #f3f4f6 !important;
+      background: #1e293b !important;
+  }
+
   table th, table td{ padding:10px 12px; text-align:left; vertical-align:middle; }
 
-  /* ──────────────────────  UNIFIED BUTTON STYLE FOR VIEW & DELETE ────────────────────── */
+  /* ────────────────────── BUTTONS ────────────────────── */
   .btn-sm {
     display: inline-block;
     padding: 6px 12px;
@@ -118,12 +133,32 @@ try {
 </form>
 
 <h2 style="margin-top:30px;">Uploaded Materials</h2>
+
+<?php if (isset($_GET['deleted'])): ?>
+  <div style="background:#d1fae5; color:#065f46; padding:12px; border-radius:6px; margin-bottom:16px; font-weight:500;">
+    Material deleted successfully.
+  </div>
+<?php endif; ?>
+
+<?php if (isset($_GET['uploaded'])): ?>
+  <div style="background:#d1fae5; color:#065f46; padding:12px; border-radius:6px; margin-bottom:16px; font-weight:500;">
+    Material uploaded successfully!
+  </div>
+<?php endif; ?>
+
 <div class="card">
   <table>
-    <tr><th>Title</th><th>Subject</th><th>File</th><th>Uploaded</th><th>Action</th></tr>
+    <tr>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Subject</th>
+      <th>File</th>
+      <th>Uploaded</th>
+      <th>Action</th>
+    </tr>
     <?php
     $stmt = $pdo->prepare("
-        SELECT m.id, m.title, s.name AS subject, m.file_path, m.uploaded_at
+        SELECT m.id, m.title, m.description, s.name AS subject, m.file_path, m.uploaded_at
         FROM materials m
         JOIN subjects s ON m.subject_id = s.id
         WHERE m.teacher_id = ?
@@ -131,24 +166,29 @@ try {
     ");
     $stmt->execute([$_SESSION['user_id']]);
     while($m = $stmt->fetch()){
-        // VIEW BUTTON – matches Delete
+        // FIXED: Use absolute path from web root
         $fileLink = $m['file_path']
-            ? '<a href="'.htmlspecialchars($m['file_path']).'" target="_blank" class="btn-sm btn-view">View</a>'
+            ? '<a href="/accendo_2nd/'.htmlspecialchars($m['file_path']).'" target="_blank" class="btn-sm btn-view">View</a>'
             : '<span style="color:#6b7280">—</span>';
 
         $uploadedDate = !empty($m['uploaded_at'])
             ? date('M j, Y g:i A', strtotime($m['uploaded_at']))
             : '—';
 
+        $description = !empty($m['description']) ? htmlspecialchars($m['description']) : '—';
+
         echo "<tr>
-                <td>".htmlspecialchars($m['title'])."</td>
-                <td>".htmlspecialchars($m['subject'])."</td>
+                <td>" . htmlspecialchars($m['title']) . "</td>
+                <td>" . $description . "</td>
+                <td>" . htmlspecialchars($m['subject']) . "</td>
                 <td>$fileLink</td>
                 <td>$uploadedDate</td>
                 <td>
-                  <a href='api/upload_material.php?delete=".urlencode($m['id'])."' 
+                  <a href='api/delete_material.php?delete=" . urlencode($m['id']) . "' 
                      class='btn-sm btn-danger' 
-                     onclick='return confirm(\"Delete this material?\")'>Delete</a>
+                     onclick='return confirm(\"Delete this material? This cannot be undone.\")'>
+                     Delete
+                  </a>
                 </td>
               </tr>";
     }
@@ -158,5 +198,6 @@ try {
 
 <?php include 'includes/footer.php'; ?>
 <script src="../assets/js/global.js"></script>
+
 </body>
 </html>

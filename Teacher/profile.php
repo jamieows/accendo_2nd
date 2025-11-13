@@ -1,15 +1,22 @@
 <?php
 // Teacher/profile.php
-// Fixed path + full UI restored
-$is_dashboard = true;                     // tells footer to use ../assets/...
-require_once '../config/db.php';          // CORRECT PATH from Teacher/ folder
+require_once '../config/db.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     header("Location: ../Auth/login.php");
     exit();
 }
 
-$user = $pdo->query("SELECT * FROM users WHERE id = " . (int)$_SESSION['user_id'])->fetch();
+// Fetch current user
+$stmt = $pdo->prepare("SELECT first_name, last_name, email FROM users WHERE id = ? AND role = 'teacher'");
+$stmt->execute([$_SESSION['user_id']]);
+$user = $stmt->fetch();
+
+if (!$user) {
+    session_destroy();
+    header("Location: ../Auth/login.php");
+    exit();
+}
 ?>
 <?php include 'includes/header.php'; ?>
 
@@ -43,7 +50,6 @@ $user = $pdo->query("SELECT * FROM users WHERE id = " . (int)$_SESSION['user_id'
         transition: all 0.3s ease;
     }
     .profile-card .field { margin-bottom: 1.75rem; }
-    .profile-card .field:last-of-type { margin-bottom: 0; }
     .profile-card label {
         display: block;
         margin-bottom: 0.5rem;
@@ -82,72 +88,98 @@ $user = $pdo->query("SELECT * FROM users WHERE id = " . (int)$_SESSION['user_id'
     .profile-card .btn {
         background: #7B61FF;
         color: white;
-        padding: 0.85rem 1.75rem;
+        padding: 0.75rem 1.5rem;
         font-weight: 600;
         border: none;
         border-radius: 0.6rem;
         cursor: pointer;
-        font-size: 1rem;
+        font-size: 0.95rem;
         transition: all 0.25s ease;
         width: 100%;
-        margin-top: 1.5rem;
+        margin-top: 1rem;
     }
     .profile-card .btn:hover {
         background: #6a51e6;
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(123,97,255,0.3);
     }
+    .alert {
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-weight: 500;
+    }
+    .alert-success { background: #d1fae5; color: #065f46; }
+    .alert-error { background: #fee2e2; color: #991b1b; }
 </style>
 
 <h1 style="text-align:center; margin-bottom:1.5rem;">Teacher Profile</h1>
 
+<?php
+$action = $_GET['action'] ?? '';
+$status = $_GET['status'] ?? '';
+if ($status === 'success') {
+    $msg = $action === 'name' ? 'Name updated!' :
+           ($action === 'email' ? 'Email updated!' : 'Password changed!');
+    echo "<div class='alert alert-success'>$msg</div>";
+} elseif ($status === 'error') {
+    $msg = $_GET['msg'] ?? 'Update failed.';
+    echo "<div class='alert alert-error'>$msg</div>";
+}
+?>
+
 <div class="profile-card">
-    <form action="api/profile_update.php" method="POST">
+
+    <!-- === NAME SECTION === -->
+    <form action="api/update_name.php" method="POST">
         <div class="field">
             <label for="first_name">First Name</label>
             <input type="text" id="first_name" name="first_name"
                    value="<?= htmlspecialchars($user['first_name']) ?>" required>
         </div>
-
         <div class="field">
             <label for="last_name">Last Name</label>
             <input type="text" id="last_name" name="last_name"
                    value="<?= htmlspecialchars($user['last_name']) ?>" required>
         </div>
+        <button type="submit" class="btn">Confirm Name Change</button>
+    </form>
 
+    <!-- === EMAIL SECTION === -->
+    <form action="api/update_email.php" method="POST" style="margin-top: 2rem;">
         <div class="field">
             <label for="email">Email Address</label>
             <input type="email" id="email" name="email"
                    value="<?= htmlspecialchars($user['email']) ?>" required>
         </div>
+        <button type="submit" class="btn">Confirm Email Change</button>
+    </form>
 
-        <hr>
+    <hr>
 
+    <!-- === PASSWORD SECTION === -->
+    <form action="api/update_password.php" method="POST" style="margin-top: 2rem;">
         <div class="field">
-            <label for="old_password">Current Password <small>(leave blank to keep)</small></label>
+            <label for="old_password">Current Password <small>(required)</small></label>
             <input type="password" id="old_password" name="old_password"
-                   placeholder="Enter current password">
+                   placeholder="Enter current password" required>
         </div>
-
         <div class="field">
             <label for="new_password">New Password</label>
             <input type="password" id="new_password" name="new_password"
-                   placeholder="Enter new password">
+                   placeholder="Enter new password" required minlength="6">
         </div>
-
         <div class="field">
             <label for="confirm_password">Confirm New Password</label>
             <input type="password" id="confirm_password" name="confirm_password"
-                   placeholder="Confirm new password">
+                   placeholder="Confirm new password" required minlength="6">
         </div>
-
-        <button type="submit" class="btn">Update Profile</button>
+        <button type="submit" class="btn">Confirm Password Change</button>
     </form>
+
 </div>
 
 <?php include 'includes/footer.php'; ?>
-
-<!-- Load global JS (dark mode, font size, etc.) -->
 <script src="../assets/js/global.js"></script>
 </body>
 </html>
