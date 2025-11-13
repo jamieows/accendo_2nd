@@ -1,22 +1,6 @@
-<<<<<<< Updated upstream
 <<!-- Teacher/includes/sidebar.php -->
 <aside id="sidebar" class="sidebar">
   <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="true">Menu</button>
-=======
-<?php
-// sidebar.php
-// Place this in: includes/sidebar.php
-?>
-<aside id="sidebar" class="sidebar">
-  <!-- Toggle Button with 3-line (hamburger) icon -->
-  <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="true">
-    <svg class="hamburger-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="3" y1="6" x2="21" y2="6"></line>
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-      <line x1="3" y1="18" x2="21" y2="18"></line>
-    </svg>
-  </button>
->>>>>>> Stashed changes
 
   <div class="logo">
     <span class="brand">Accendo</span>
@@ -24,85 +8,48 @@
   </div>
 
   <nav>
-<<<<<<< Updated upstream
     <a href="index.php" class="<?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : '' ?>">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zM13 21h8v-10h-8v10zM13 3v6h8V3h-8z"/></svg>
-=======
-    <a href="index.php" class="<?= basename($_SERVER['PHP_SELF']) === 'index.php' ? 'active' : '' ?>"> 
-      <span class="icon">
-        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zM13 21h8v-10h-8v10zM13 3v6h8V3h-8z"/></svg>
->>>>>>> Stashed changes
       </span>
       <span class="label">Dashboard</span>
     </a>
 
-<<<<<<< Updated upstream
     <a href="my_courses.php" class="<?= basename($_SERVER['PHP_SELF']) == 'my_courses.php' ? 'active' : '' ?>">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 2H6c-1.1 0-2 .9-2 2v16l7-3 7 3V4c0-1.1-.9-2-2-2z"/></svg>
-=======
-    <a href="my_courses.php" class="<?= basename($_SERVER['PHP_SELF']) === 'my_courses.php' ? 'active' : '' ?>">
-      <span class="icon">
-        <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16l7-3 7 3V4c0-1.1-.9-2-2-2z"/></svg>
->>>>>>> Stashed changes
       </span>
       <span class="label">My Courses</span>
     </a>
 
-<<<<<<< Updated upstream
-    <a href="assignment.php" class="<?= basename($_SERVER['PHP_SELF']) == 'assignment.php' ? 'active' : '' ?>">
+    <a href="assignments.php" class="<?= basename($_SERVER['PHP_SELF']) == 'assignments.php' ? 'active' : '' ?>">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h-1.5l-.71-1.42C13.6 1.22 13.32 1 12.99 1h-1.98c-.33 0-.61.22-.79.58L9.51 4H8C6.9 4 6 4.9 6 6v13c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM12 17.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 10.5 12 10.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-=======
-    <a href="assignments.php" class="<?= basename($_SERVER['PHP_SELF']) === 'assignments.php' ? 'active' : '' ?>">
-      <span class="icon">
-        <svg viewBox="0 0 24 24"><path d="M16 4h-1.5l-.71-1.42C13.6 1.22 13.32 1 12.99 1h-1.98c-.33 0-.61.22-.79.58L9.51 4H8C6.9 4 6 4.9 6 6v13c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM12 17.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 10.5 12 10.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
->>>>>>> Stashed changes
       </span>
       <span class="label">Assignments</span>
     </a>
 
-<<<<<<< Updated upstream
     <a href="exams.php" class="<?= basename($_SERVER['PHP_SELF']) == 'exams.php' ? 'active' : '' ?>">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM14 3.5L18.5 8H14V3.5zM8 8h8v2H8V8zM8 12h8v2H8v-2z"/></svg>
-=======
-    <a href="exams.php" class="<?= basename($_SERVER['PHP_SELF']) === 'exams.php' ? 'active' : '' ?>">
-      <span class="icon">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM14 3.5L18.5 8H14V3.5zM8 8h8v2H8V8zM8 12h8v2H8v-2z"/></svg>
->>>>>>> Stashed changes
       </span>
       <span class="label">Exams</span>
     </a>
 
-<<<<<<< Updated upstream
     <a href="profile.php" class="<?= basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : '' ?>">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-9 1.7-9 5v3h18v-3c0-3.3-5.7-5-9-5z"/></svg>
-=======
-    <a href="profile.php" class="<?= basename($_SERVER['PHP_SELF']) === 'profile.php' ? 'active' : '' ?>">
-      <span class="icon">
-        <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-9 1.7-9 5v3h18v-3c0-3.3-5.7-5-9-5z"/></svg>
->>>>>>> Stashed changes
       </span>
       <span class="label">Profile</span>
     </a>
 
-<<<<<<< Updated upstream
     <a href="settings.php" class="<?= basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : '' ?>">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19.14 12.94c.04-.3.06-.6.06-.94s-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.62l-1.92-3.32c-.11-.2-.35-.28-.55-.2l-2.39.96c-.5-.38-1.05-.7-1.62-.94l-.36-2.54A.49.49 0 0 0 14 2h-4c-.24 0-.45.17-.49.41l-.36 2.54c-.57.22-1.11.5-1.62.94l-2.39-.96a.5.5 0 0 0-.55.2L2.01 9.86c-.11.2-.06.47.12.62l2.03 1.58c-.04.3-.06.63-.06.96s.02.63.06.94L2.13 16.3c-.18.14-.23.41-.12.62l1.92 3.32c.11.2.35.28.55.2l2.39-.96c.5.44 1.05.82 1.62.94l.36 2.54c.04.24.25.41.49.41h4c.24 0 .45-.17.49-.41l.36-2.54c.57-.22 1.11-.5 1.62-.94l2.39.96c.2.08.44 0 .55-.2l1.92-3.32c.11-.2.06-.47-.12-.62l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
-=======
-    <a href="settings.php" class="<?= basename($_SERVER['PHP_SELF']) === 'settings.php' ? 'active' : '' ?>">
-      <span class="icon">
-        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.6.06-.94s-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.62l-1.92-3.32c-.11-.2-.35-.28-.55-.2l-2.39.96c-.5-.38-1.05-.7-1.62-.94l-.36-2.54A.49.49 0 0 0 14 2h-4c-.24 0-.45.17-.49.41l-.36 2.54c-.57.22-1.11.5-1.62.94l-2.39-.96a.5.5 0 0 0-.55.2L2.01 9.86c-.11.2-.06.47.12.62l2.03 1.58c-.04.3-.06.63-.06.96s.02.63.06.94L2.13 16.3c-.18.14-.23.41-.12.62l1.92 3.32c.11.2.35.28.55.2l2.39-.96c.5.44 1.05.82 1.62.94l.36 2.54c.04.24.25.41.49.41h4c.24 0 .45-.17.49-.41l.36-2.54c.57-.22 1.11-.5 1.62-.94l2.39.96c.2.08.44 0 .55-.2l1.92-3.32c.11-.2.06-.47-.12-.62l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
->>>>>>> Stashed changes
       </span>
       <span class="label">Settings</span>
     </a>
 
-<<<<<<< Updated upstream
     <!-- DARK MODE & FONT SIZE AT BOTTOM -->
     <div style="margin-top:auto; padding:12px 8px;">
       <!-- DARK MODE TOGGLE -->
@@ -118,15 +65,9 @@
       </div>
     </div>
 
-    <a href="../Auth/logout.php">
+    <a href="#" id="logoutLink">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 13v-2h-5V8l-4 4 4 4v-3h5zM20 3h-8v2h8v14h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
-=======
-    <!-- Logout Link with Dialog -->
-    <a href="javascript:void(0)" id="logoutLink" class="logout">
-      <span class="icon">
-        <svg viewBox="0 0 24 24"><path d="M16 13v-2h-5V8l-4 4 4 4v-3h5zM20 3h-8v2h8v14h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
->>>>>>> Stashed changes
       </span>
       <span class="label">Logout</span>
     </a>
@@ -352,7 +293,6 @@ nav a .label {
   .sidebar { 
     padding: 12px 8px; 
   }
-<<<<<<< Updated upstream
 
   .sidebar.collapsed{ width:var(--sidebar-collapsed-w); }
   .sidebar .logo{ display:flex; flex-direction:column; gap:2px; padding:8px 10px; align-items:flex-start; }
@@ -393,20 +333,11 @@ nav a .label {
 
   @media (max-width:840px){
     .sidebar{ width:var(--sidebar-collapsed-w); }
-=======
-  nav a { 
-    justify-content: center; 
-  }
-  .sidebar-toggle { 
-    right: -16px; 
-    top: 10px; 
->>>>>>> Stashed changes
   }
 }
 </style>
 
 <script>
-<<<<<<< Updated upstream
   // Font Awesome for moon icon
   if (!document.querySelector('link[href*="font-awesome"]')) {
     const link = document.createElement('link');
@@ -427,36 +358,13 @@ nav a .label {
       const collapsed = sidebar.classList.contains('collapsed');
       btn.setAttribute('aria-expanded', String(!collapsed));
     }
-=======
-// Sidebar Toggle with body class management
-(function(){
-  const sidebar = document.getElementById('sidebar');
-  const btn = document.getElementById('sidebar-toggle');
-  const icon = btn.querySelector('.hamburger-icon');
-  const stored = localStorage.getItem('sidebar-hidden');
-  
-  // Initialize sidebar state
-  if(stored === '1') {
-    sidebar.classList.add('hidden');
-    document.body.classList.add('sidebar-hidden');
-    icon.style.transform = 'rotate(90deg)';
-  }
-
-  function updateAria(){
-    const expanded = !sidebar.classList.contains('hidden');
-    btn.setAttribute('aria-expanded', String(expanded));
-  }
-  updateAria();
-
-  // Toggle sidebar
-  btn.addEventListener('click', () => {
-    sidebar.classList.toggle('hidden');
-    document.body.classList.toggle('sidebar-hidden');
-    const isHidden = sidebar.classList.contains('hidden');
-    localStorage.setItem('sidebar-hidden', isHidden ? '1' : '0');
-    icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
->>>>>>> Stashed changes
     updateAria();
+
+    btn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+      updateAria();
+    });
   });
 })();
 
@@ -466,13 +374,29 @@ document.addEventListener('DOMContentLoaded', function () {
   const dialog = document.getElementById('logoutDialog');
   const cancelBtn = document.getElementById('cancelLogout');
   const confirmBtn = document.getElementById('confirmLogout');
-  const dialogContent = dialog.querySelector('.dialog-content');
 
-<<<<<<< Updated upstream
-    btn.addEventListener('keydown', function(e){
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+  if (logoutLink && dialog) {
+    logoutLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      dialog.style.display = 'flex';
     });
-  })();
+
+    cancelBtn.addEventListener('click', function() {
+      dialog.style.display = 'none';
+    });
+
+    confirmBtn.addEventListener('click', function() {
+      window.location.href = '../Auth/logout.php';
+    });
+
+    // Close on backdrop click
+    dialog.addEventListener('click', function(e) {
+      if (e.target === dialog) {
+        dialog.style.display = 'none';
+      }
+    });
+  }
+});
 
   // Dark Mode Toggle
   document.getElementById('dark-toggle').addEventListener('click', function(e){
@@ -511,28 +435,3 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 </script>
-=======
-  logoutLink.addEventListener('click', () => {
-    dialog.style.display = 'flex';
-    dialogContent.focus();
-  });
-
-  cancelBtn.addEventListener('click', () => dialog.style.display = 'none');
-  confirmBtn.addEventListener('click', () => {
-    window.location.href = '../Auth/logout.php';
-  });
-
-  // Close on backdrop click
-  dialog.addEventListener('click', (e) => { 
-    if (e.target === dialog) dialog.style.display = 'none'; 
-  });
-
-  // Close on Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && dialog.style.display === 'flex') {
-      dialog.style.display = 'none';
-    }
-  });
-});
-</script>
->>>>>>> Stashed changes

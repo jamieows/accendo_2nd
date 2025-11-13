@@ -241,6 +241,31 @@ document.addEventListener('DOMContentLoaded', function () {
       card.style.display = title.includes(query) ? 'flex' : 'none';
     });
   });
+
+  // Speech synthesis for speak buttons
+  const speakButtons = document.querySelectorAll('.voice-btn.speak-btn');
+  if ('speechSynthesis' in window) {
+    const voices = speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.lang === 'fil-PH') ||
+                          voices.find(v => v.lang.startsWith('en')) ||
+                          voices[0];
+
+    speakButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const text = btn.closest('.material-card').querySelector('.material-title').textContent;
+        if (text) {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.9;
+          utterance.pitch = 1;
+          utterance.volume = 1;
+          if (preferredVoice) utterance.voice = preferredVoice;
+          speechSynthesis.speak(utterance);
+        }
+      });
+    });
+  } else {
+    speakButtons.forEach(btn => btn.style.display = 'none');
+  }
 });
 </script>
 
