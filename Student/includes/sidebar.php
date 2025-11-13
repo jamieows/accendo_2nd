@@ -102,7 +102,7 @@
   nav{ display:flex; flex-direction:column; gap:6px; margin-top:6px; flex:1; }
   nav a{
     display:flex; align-items:center; gap:12px; padding:10px; text-decoration:none; color:inherit;
-    border-radius:8px; transition:background .18s ease, transform .18s ease;
+    border-radius:8px; transition: background .18s ease, transform .18s ease;
     transform-origin:left center;
   }
   nav a .icon{ width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; flex:0 0 28px; color:var(--accent); }
