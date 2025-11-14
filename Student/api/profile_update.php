@@ -1,13 +1,13 @@
 <?php
 // student/api/profile_update.php
-require_once '../../config/db.php';   // adjust if your db.php lives elsewhere
+require_once '../../config/db.php';
 session_start();
 
 header('Content-Type: application/json');
 
-// ---------------------------------------------------
-// 1. BASIC SECURITY
-// ---------------------------------------------------
+// ========================================================
+// 1. REQUEST & AUTHENTICATION
+// ========================================================
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
     exit;
@@ -20,10 +20,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 
 $userId = (int)$_SESSION['user_id'];
 
-// ---------------------------------------------------
-// 2. FETCH CURRENT USER
-// ---------------------------------------------------
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+// ========================================================
+// 2. FETCH CURRENT USER DATA
+// ========================================================
+$stmt = $pdo->prepare("SELECT id, first_name, last_name, email, password FROM users WHERE id = ?");
 $stmt->execute([$userId]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -32,136 +32,152 @@ if (!$user) {
     exit;
 }
 
-// ---------------------------------------------------
-// 3. COLLECT & VALIDATE INPUT
-// ---------------------------------------------------
-$first_name = trim($_POST['first_name'] ?? '');
-$last_name  = trim($_POST['last_name'] ?? '');
-$email      = trim($_POST['email'] ?? '');
+// ========================================================
+// 3. INPUT COLLECTION
+// ========================================================
+$first_name       = trim($_POST['first_name'] ?? '');
+$last_name        = trim($_POST['last_name'] ?? '');
+$email            = trim($_POST['email'] ?? '');
+$old_password     = $_POST['old_password'] ?? '';
+$new_password     = $_POST['new_password'] ?? '';
+$confirm_password = $_POST['confirm_password'] ?? '';
 
-$old_password       = $_POST['old_password'] ?? '';
-$new_password       = $_POST['new_password'] ?? '';
-$confirm_password   = $_POST['confirm_password'] ?? '';
-
-if ($first_name === '' || $last_name === '' || $email === '') {
-    echo json_encode(['status' => 'error', 'message' => 'All required fields must be filled']);
+// ========================================================
+// 4. VALIDATION: REQUIRED FIELDS
+// ========================================================
+if ($first_name === '') {
+    echo json_encode([
+        'status'  => 'error',
+        'message' => 'First name is required',
+        'field'   => 'first_name'
+    ]);
     exit;
 }
 
-// E-mail format
+if ($last_name === '') {
+    echo json_encode([
+        'status'  => 'error',
+        'message' => 'Last name is required',
+        'field'   => 'last_name'
+    ]);
+    exit;
+}
+
+if ($email === '') {
+    echo json_encode([
+        'status'  => 'error',
+        'message' => 'Email address is required',
+        'field'   => 'email'
+    ]);
+    exit;
+}
+
+// ========================================================
+// 5. VALIDATION: EMAIL FORMAT
+// ========================================================
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid e-mail address']);
+    echo json_encode([
+        'status'  => 'error',
+        'message' => 'Invalid email format',
+        'field'   => 'email'
+    ]);
     exit;
 }
 
-// ---------------------------------------------------
-// 4. BUILD UPDATE ARRAY
-// ---------------------------------------------------
+// ========================================================
+// 6. VALIDATION: EMAIL UNIQUENESS (skip current user)
+// ========================================================
+if ($email !== $user['email']) {
+    $check = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+    $check->execute([$email, $userId]);
+    if ($check->fetch()) {
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'This email is already taken',
+            'field'   => 'email'
+        ]);
+        exit;
+    }
+}
+
+// ========================================================
+// 7. PASSWORD CHANGE LOGIC (only if new password given)
+// ========================================================
 $updates = [
     'first_name' => $first_name,
     'last_name'  => $last_name,
-    'email'      => $email,
+    'email'      => $email
 ];
-$params = [':id' => $userId];
 
-// ---- E-MAIL UNIQUENESS (except current user) ----
-if ($email !== $user['email']) {
-    $chk = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
-    $chk->execute([$email, $userId]);
-    if ($chk->fetch()) {
-        echo json_encode(['status' => 'error', 'message' => 'E-mail already taken']);
-        exit;
-    }
-}
-
-// ---- PASSWORD CHANGE (optional) ----
 if (!empty($new_password)) {
+
+    // 7.1 Current password required
     if (empty($old_password)) {
-        echo json_encode(['status' => 'error', 'message' => 'Current password required']);
-        exit;
-    }
-    if ($new_password !== $confirm_password) {
-        echo json_encode(['status' => 'error', 'message' => 'New passwords do not match']);
-        exit;
-    }
-    if (!password_verify($old_password, $user['password'])) {
-        echo json_encode(['status' => 'error', 'message' => 'Incorrect current password']);
-        exit;
-    }
-    if (strlen($new_password) < 8) {
-        echo json_encode(['status' => 'error', 'message' => 'New password ≥ 8 characters']);
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Current password is required',
+            'field'   => 'old_password'
+        ]);
         exit;
     }
 
+    // 7.2 Confirm password match
+    if ($new_password !== $confirm_password) {
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Passwords do not match',
+            'field'   => 'confirm_password'
+        ]);
+        exit;
+    }
+
+    // 7.3 Verify current password
+    if (!password_verify($old_password, $user['password'])) {
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Current password is incorrect',
+            'field'   => 'old_password'
+        ]);
+        exit;
+    }
+
+    // 7.4 Minimum length
+    if (strlen($new_password) < 8) {
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Password must be at least 8 characters',
+            'field'   => 'new_password'
+        ]);
+        exit;
+    }
+
+    // 7.5 Hash new password
     $updates['password'] = password_hash($new_password, PASSWORD_BCRYPT);
 }
 
-// ---- PROFILE IMAGE ----
-$profileImage = null;
-if (!empty($_FILES['profile_image']['name'])) {
-    $file = $_FILES['profile_image'];
-
-    // allowed types & max 5 MB
-    $allowed = ['image/jpeg', 'image/png', 'image/gif'];
-    $maxSize = 5 * 1024 * 1024;
-
-    if (!in_array($file['type'], $allowed)) {
-        echo json_encode(['status' => 'error', 'message' => 'Only JPG, PNG, GIF allowed']);
-        exit;
-    }
-    if ($file['size'] > $maxSize) {
-        echo json_encode(['status' => 'error', 'message' => 'File too large (max 5 MB)']);
-        exit;
-    }
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        echo json_encode(['status' => 'error', 'message' => 'Upload error']);
-        exit;
-    }
-
-    // unique filename + keep extension
-    $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = $userId . '_' . time() . '.' . $ext;
-    $dest     = '../../uploads/' . $filename;   // <-- make sure this folder exists & is writable
-
-    if (!move_uploaded_file($file['tmp_name'], $dest)) {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to save image']);
-        exit;
-    }
-
-    // delete old image if any
-    if (!empty($user['profile_image'])) {
-        $old = '../../uploads/' . $user['profile_image'];
-        if (file_exists($old)) @unlink($old);
-    }
-
-    $updates['profile_image'] = $filename;
-}
-
-// ---------------------------------------------------
-// 5. BUILD & EXECUTE SQL
-// ---------------------------------------------------
+// ========================================================
+// 8. DATABASE UPDATE
+// ========================================================
 if (empty($updates)) {
-    // nothing changed – still a success for UX
     echo json_encode(['status' => 'success']);
     exit;
 }
 
 $setParts = [];
-foreach ($updates as $col => $val) {
-    $placeholder          = ':' . $col;
-    $setParts[]           = "`$col` = $placeholder";
-    $params[$placeholder] = $val;
+$params   = [':id' => $userId];
+
+foreach ($updates as $column => $value) {
+    $placeholder = ':' . $column;
+    $setParts[] = "`$column` = $placeholder";
+    $params[$placeholder] = $value;
 }
 
 $sql = "UPDATE users SET " . implode(', ', $setParts) . " WHERE id = :id";
+$updateStmt = $pdo->prepare($sql);
 
-$upd = $pdo->prepare($sql);
-$ok  = $upd->execute($params);
-
-if ($ok) {
-    // refresh session name
-    $_SESSION['name'] = $first_name . ' ' . $last_name;
-
+if ($updateStmt->execute($params)) {
+    // Update session name
+    $_SESSION['name'] = "$first_name $last_name";
     echo json_encode(['status' => 'success']);
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Database update failed']);
