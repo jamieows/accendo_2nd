@@ -60,4 +60,4 @@ $stmt->execute([$teacher_id, $subject_id, $title, $description, $dbPath]);
 
 header("Location: ../my_courses.php?uploaded=1");
 exit();
-?>
+?>d

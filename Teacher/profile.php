@@ -130,7 +130,7 @@ if ($status === 'success') {
 
 <div class="profile-card">
 
-    <!-- === NAME SECTION === -->
+    <!-- === NAME CHANGE === -->
     <form action="api/update_name.php" method="POST">
         <div class="field">
             <label for="first_name">First Name</label>
@@ -145,7 +145,7 @@ if ($status === 'success') {
         <button type="submit" class="btn">Confirm Name Change</button>
     </form>
 
-    <!-- === EMAIL SECTION === -->
+    <!-- === EMAIL CHANGE === -->
     <form action="api/update_email.php" method="POST" style="margin-top: 2rem;">
         <div class="field">
             <label for="email">Email Address</label>
@@ -157,7 +157,7 @@ if ($status === 'success') {
 
     <hr>
 
-    <!-- === PASSWORD SECTION === -->
+    <!-- === PASSWORD CHANGE (Optional) === -->
     <form action="api/update_password.php" method="POST" style="margin-top: 2rem;">
         <div class="field">
             <label for="old_password">Current Password <small>(required)</small></label>

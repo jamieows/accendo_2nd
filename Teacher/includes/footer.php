@@ -3,36 +3,27 @@
     &copy; <?= date('Y') ?> Accendo LMS | For Teachers
   </footer>
   <script>
-  // Load Font Awesome
-  if (!document.querySelector('link[href*="font-awesome"]')) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css';
-    document.head.appendChild(link);
-  }
+  // === DARK MODE (Keep Existing) ===
+  const darkToggle = document.getElementById('dark-toggle');
+  const darkIcon = document.getElementById('dark-icon');
+  const darkText = document.getElementById('dark-text');
 
-  // === APPLY DARK MODE ON LOAD ===
   if (localStorage.getItem('dark-mode') === '1') {
     document.body.classList.add('dark-mode');
-    const icon = document.getElementById('dark-icon');
-    const text = document.getElementById('dark-text');
-    if (icon) icon.innerHTML = '<i class="fas fa-sun"></i>';
-    if (text) text.textContent = 'Light Mode';
+    if (darkIcon) darkIcon.innerHTML = 'Sun';
+    if (darkText) darkText.textContent = 'Light Mode';
   }
 
-  // === DARK MODE TOGGLE ===
-  document.getElementById('dark-toggle')?.addEventListener('click', (e) => {
+  darkToggle?.addEventListener('click', (e) => {
     e.preventDefault();
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('dark-mode', isDark ? '1' : '0');
-    const icon = document.getElementById('dark-icon');
-    const text = document.getElementById('dark-text');
-    if (icon) icon.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    if (text) text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    if (darkIcon) darkIcon.innerHTML = isDark ? 'Sun' : 'Moon';
+    if (darkText) darkText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
   });
 
-  // === FONT SIZE CONTROLS ===
+  // === FONT SIZE ADJUSTMENT (NEW FEATURE) ===
   let fontSize = parseInt(localStorage.getItem('font-size') || '16', 10);
   document.documentElement.style.fontSize = fontSize + 'px';
 
@@ -52,7 +43,5 @@
     }
   });
 </script>
-</body>
-</html>
 </body>
 </html>

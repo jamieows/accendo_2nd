@@ -1,11 +1,11 @@
 /* Teacher/assets/css/layout.css */
 :root {
-  --sidebar-width: 260px;
+  --sidebar-width: 260px; /* Match your sidebar */
 }
 
 body {
   margin: 0;
-  padding: 0;
+  padding-left: var(--sidebar-width); /* THIS FIXES OVERLAP */
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
@@ -13,25 +13,9 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
-/* CONTENT AREA — NEVER UNDER SIDEBAR */
-.main-content {
-  margin-left: var(--sidebar-width);
-  padding: 28px 32px;
-  min-height: 100vh;
-  transition: margin-left 0.35s ease;
-}
-
-/* RESPONSIVE: On small screens, remove left margin */
+/* Remove padding on mobile */
 @media (max-width: 992px) {
-  .main-content {
-    margin-left: 0;
-    padding: 20px 22px;
-  }
-}
-
-@media (max-width: 840px) {
-  .main-content {
-    margin-left: 0 !important;
-    padding: 18px 20px;
+  body {
+    padding-left: 0;
   }
 }

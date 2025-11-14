@@ -10,11 +10,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
 $email = trim($_POST['email'] ?? '');
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    header("Location: ../profile.php?action=email&status=error&msg=Invalid email");
+    header("Location: ../profile.php?action=email&status=error&msg=Invalid email format");
     exit();
 }
 
-// Check duplicate
+// Check if email is already taken
 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
 $stmt->execute([$email, $_SESSION['user_id']]);
 if ($stmt->fetch()) {
@@ -22,6 +22,7 @@ if ($stmt->fetch()) {
     exit();
 }
 
+// Update DB
 $stmt = $pdo->prepare("UPDATE users SET email = ? WHERE id = ?");
 $stmt->execute([$email, $_SESSION['user_id']]);
 

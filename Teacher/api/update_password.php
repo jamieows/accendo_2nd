@@ -7,33 +7,35 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     exit();
 }
 
-$old_pass = $_POST['old_password'] ?? '';
-$new_pass = $_POST['new_password'] ?? '';
-$confirm  = $_POST['confirm_password'] ?? '';
+$old = $_POST['old_password'] ?? '';
+$new = $_POST['new_password'] ?? '';
+$confirm = $_POST['confirm_password'] ?? '';
 
-if (empty($old_pass) || empty($new_pass) || empty($confirm)) {
+if (empty($old) || empty($new) || empty($confirm)) {
     header("Location: ../profile.php?action=password&status=error&msg=All fields required");
     exit();
 }
-if ($new_pass !== $confirm) {
-    header("Location: ../profile.php?action=password&status=error&msg=Passwords do not match");
+if ($new !== $confirm) {
+    header("Location: ../profile.php?action=password&status=error&msg=New passwords do not match");
     exit();
 }
-if (strlen($new_pass) < 6) {
+if (strlen($new) < 6) {
     header("Location: ../profile.php?action=password&status=error&msg=Password too short");
     exit();
 }
 
-// Verify old password
+// Verify current password
 $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
-if (!password_verify($old_pass, $user['password'])) {
-    header("Location: ../profile.php?action=password&status=error&msg=Current password incorrect");
+
+if (!password_verify($old, $user['password'])) {
+    header("Location: ../profile.php?action=password&status=error&msg=Current password is wrong");
     exit();
 }
 
-$hashed = password_hash($new_pass, PASSWORD_DEFAULT);
+// Update password
+$hashed = password_hash($new, PASSWORD_DEFAULT);
 $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
 $stmt->execute([$hashed, $_SESSION['user_id']]);
 
