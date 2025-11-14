@@ -1,6 +1,12 @@
-<<!-- Teacher/includes/sidebar.php -->
+<!-- Teacher/includes/sidebar.php -->
 <aside id="sidebar" class="sidebar">
-  <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="true">Menu</button>
+  <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </button>
 
   <div class="logo">
     <span class="brand">Accendo</span>
@@ -50,22 +56,7 @@
       <span class="label">Settings</span>
     </a>
 
-    <!-- DARK MODE & FONT SIZE AT BOTTOM -->
-    <div style="margin-top:auto; padding:12px 8px;">
-      <!-- DARK MODE TOGGLE -->
-      <a href="#" id="dark-toggle" class="d-flex align-items-center p-2 rounded text-decoration-none" style="color:inherit;">
-        <span class="icon me-2" id="dark-icon"><i class="fas fa-moon"></i></span>
-        <span id="dark-text" class="label">Dark Mode</span>
-      </a>
-
-      <!-- FONT SIZE -->
-      <div class="d-flex gap-2 mt-2">
-        <button id="font-increase" class="btn flex-fill">A+</button>
-        <button id="font-decrease" class="btn flex-fill">A-</button>
-      </div>
-    </div>
-
-    <a href="#" id="logoutLink">
+    <a href="#" id="logoutLink" style="margin-top: auto;">
       <span class="icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 13v-2h-5V8l-4 4 4 4v-3h5zM20 3h-8v2h8v14h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
       </span>
@@ -76,20 +67,28 @@
 
 <!-- Logout Confirmation Dialog -->
 <div id="logoutDialog" class="logout-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">
+  <div class="dialog-overlay"></div>
   <div class="dialog-content" tabindex="-1">
-    <h3 id="logoutTitle">Log out of your account?</h3>
+    <h3 id="logoutTitle">Are you sure you want to log out?</h3>
     <p>You'll need to sign in again to access Accendo.</p>
     <div class="dialog-actions">
       <button id="cancelLogout" class="btn btn-cancel">Cancel</button>
-      <button id="confirmLogout" class="btn btn-danger">Logout</button>
+      <button id="confirmLogout" class="btn btn-danger">Log Out</button>
     </div>
   </div>
 </div>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Professional Font System - 3 Fonts Only */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
+  /* Font System */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  
+  /* Sidebar */
   --sidebar-width: 220px;
   --accent: #1e40af;
   --muted: #6b7280;
@@ -97,7 +96,6 @@
   --card-dark: #1b243a;
   --text-light: #e6eef8;
   --danger: #dc2626;
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* Sidebar */
@@ -114,8 +112,9 @@
   box-shadow: 0 6px 24px rgba(0,0,0,0.4);
   transition: transform 0.3s ease;
   z-index: 1100;
-  font-family: var(--font-family);
+  font-family: var(--font-primary);
 }
+
 .sidebar.hidden { 
   transform: translateX(-100%); 
 }
@@ -130,11 +129,13 @@
 .logo .brand { 
   font-weight: 700; 
   font-size: 1.05rem; 
-  color: #f0f4ff; 
+  color: #f0f4ff;
+  font-family: var(--font-heading);
 }
 .logo .tagline { 
   font-size: 0.78rem; 
   color: #a0aec0; 
+  font-family: var(--font-primary);
 }
 
 /* Navigation */
@@ -154,10 +155,11 @@ nav a {
   color: #cbd5e1;
   border-radius: 8px; 
   transition: all 0.2s ease;
+  font-family: var(--font-primary);
 }
 nav a:hover { 
   background: rgba(30,64,175,0.1); 
-  transform: translateX(4px) scale(1.02); 
+  transform: translateX(4px); 
 }
 nav a.active { 
   background: rgba(30,64,175,0.2); 
@@ -201,33 +203,34 @@ nav a .label {
   align-items: center; 
   justify-content: center;
   transition: all 0.2s ease;
-  font-family: var(--font-family);
+  font-family: var(--font-primary);
 }
 .sidebar-toggle:hover { 
   transform: scale(1.05); 
   background: #11172b; 
-}
-.hamburger-icon {
-  transition: transform 0.2s ease;
-}
-.sidebar.hidden .hamburger-icon {
-  transform: rotate(90deg);
 }
 
 /* Logout Dialog */
 .logout-dialog {
   position: fixed; 
   inset: 0; 
-  background: rgba(0,0,0,0.75);
   display: flex; 
   justify-content: center; 
   align-items: center;
   z-index: 10000; 
-  backdrop-filter: blur(5px);
   animation: fadeIn 0.3s ease;
-  font-family: var(--font-family);
+  font-family: var(--font-primary);
 }
+
+.dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(5px);
+}
+
 .dialog-content {
+  position: relative;
   background: var(--card-dark); 
   padding: 1.8rem; 
   border-radius: 16px;
@@ -237,11 +240,14 @@ nav a .label {
   box-shadow: 0 12px 32px rgba(0,0,0,0.5); 
   color: var(--text-light);
   outline: none;
+  animation: slideIn 0.3s ease;
 }
+
 .dialog-content h3 { 
   margin: 0 0 0.5rem; 
   font-size: 1.35rem; 
-  font-weight: 600; 
+  font-weight: 600;
+  font-family: var(--font-heading);
 }
 .dialog-content p { 
   color: #9ca3af; 
@@ -262,6 +268,7 @@ nav a .label {
   cursor: pointer; 
   font-size: 0.95rem; 
   transition: all 0.2s ease;
+  font-family: var(--font-primary);
 }
 .btn-cancel { 
   background: #2a3552; 
@@ -279,92 +286,61 @@ nav a .label {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Responsive - Collapsed on Mobile */
+@keyframes slideIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   :root { --sidebar-width: 70px; }
   .sidebar .logo, 
   .sidebar .label { 
     display: none; 
   }
-  .sidebar { 
-    padding: 12px 8px; 
-  }
-
-  .sidebar.collapsed{ width:var(--sidebar-collapsed-w); }
-  .sidebar .logo{ display:flex; flex-direction:column; gap:2px; padding:8px 10px; align-items:flex-start; }
-  .sidebar .logo .brand{ font-weight:700; font-size:1.05rem; }
-  .sidebar .logo .tagline{ font-size:0.78rem; color:var(--muted); opacity:1; transition:opacity .18s ease; }
-
-  .sidebar.collapsed .logo .tagline{ opacity:0; transform:translateX(-6px); }
-
-  nav{ display:flex; flex-direction:column; gap:6px; margin-top:6px; flex:1; }
-  nav a{
-    display:flex; align-items:center; gap:12px; padding:10px; text-decoration:none; color:inherit;
-    border-radius:8px; transition: background .18s ease, transform .18s ease;
-    transform-origin:left center;
-  }
-  nav a .icon{ width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; flex:0 0 28px; color:var(--accent); }
-  nav a .icon svg{ width:22px; height:22px; fill:currentColor; }
-
-  nav a .label{ white-space:nowrap; font-weight:600; transition:opacity .18s ease, transform .18s ease, font-size .18s ease; }
-
-  .sidebar.collapsed nav a{ justify-content:center; }
-  .sidebar.collapsed nav a .label{ opacity:0; transform:translateX(-8px); width:0; font-size:0.85rem; pointer-events:none; }
-
-  .sidebar.collapsed:hover{ width:var(--sidebar-w); }
-  .sidebar.collapsed:hover nav a{ justify-content:flex-start; }
-  .sidebar.collapsed:hover .logo .tagline{ opacity:1; transform:none; }
-
-  nav a:hover{ background:linear-gradient(90deg, rgba(30,64,175,0.06), rgba(30,64,175,0.02)); transform:translateX(4px) scale(1.02); box-shadow:0 6px 18px rgba(2,6,23,0.04); }
-  nav a.active{ background:linear-gradient(90deg, rgba(30,64,175,0.12), rgba(30,64,175,0.04)); color:var(--accent); }
-
-  .sidebar-toggle{
-    position:absolute; right:-18px; top:12px;
-    width:36px; height:36px; border-radius:10px; border:1px solid rgba(7,17,34,0.06);
-    background:#fff; cursor:pointer; box-shadow:0 6px 18px rgba(2,6,23,0.08);
-    display:flex; align-items:center; justify-content:center; font-size:16px;
-    transition:transform .18s ease;
-  }
-  .sidebar.collapsed .sidebar-toggle{ transform:rotate(180deg); right:-18px; }
-
-  @media (max-width:840px){
-    .sidebar{ width:var(--sidebar-collapsed-w); }
-  }
 }
 </style>
 
 <script>
-  // Font Awesome for moon icon
-  if (!document.querySelector('link[href*="font-awesome"]')) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css';
-    document.head.appendChild(link);
+// Sidebar Toggle Logic
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const btn = document.getElementById('sidebar-toggle');
+  const content = document.querySelector('.content');
+
+  const stored = localStorage.getItem('sidebar-hidden');
+  if (stored === '1') {
+    sidebar.classList.add('hidden');
+    if (content) content.style.marginLeft = '0';
   }
 
-  // Sidebar Collapse Logic
-  (function(){
-    const sidebar = document.getElementById('sidebar');
-    const btn = document.getElementById('sidebar-toggle');
+  function updateAria(){
+    const hidden = sidebar.classList.contains('hidden');
+    btn.setAttribute('aria-expanded', String(!hidden));
+  }
+  updateAria();
 
-    const stored = localStorage.getItem('sidebar-collapsed');
-    if (stored === '1') sidebar.classList.add('collapsed');
-
-    function updateAria(){
-      const collapsed = sidebar.classList.contains('collapsed');
-      btn.setAttribute('aria-expanded', String(!collapsed));
+  btn.addEventListener('click', () => {
+    sidebar.classList.toggle('hidden');
+    const isHidden = sidebar.classList.contains('hidden');
+    localStorage.setItem('sidebar-hidden', isHidden ? '1' : '0');
+    
+    // Adjust content margin
+    if (content) {
+      content.style.marginLeft = isHidden ? '0' : 'var(--sidebar-width)';
     }
+    
     updateAria();
-
-    btn.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-      localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
-      updateAria();
-    });
   });
 })();
 
@@ -374,64 +350,35 @@ document.addEventListener('DOMContentLoaded', function () {
   const dialog = document.getElementById('logoutDialog');
   const cancelBtn = document.getElementById('cancelLogout');
   const confirmBtn = document.getElementById('confirmLogout');
+  const overlay = dialog.querySelector('.dialog-overlay');
 
   if (logoutLink && dialog) {
     logoutLink.addEventListener('click', function(e) {
       e.preventDefault();
       dialog.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
     });
 
-    cancelBtn.addEventListener('click', function() {
+    function closeDialog() {
       dialog.style.display = 'none';
-    });
+      document.body.style.overflow = '';
+    }
+
+    cancelBtn.addEventListener('click', closeDialog);
 
     confirmBtn.addEventListener('click', function() {
       window.location.href = '../Auth/logout.php';
     });
 
-    // Close on backdrop click
-    dialog.addEventListener('click', function(e) {
-      if (e.target === dialog) {
-        dialog.style.display = 'none';
+    // Close on overlay click
+    overlay.addEventListener('click', closeDialog);
+
+    // Close on ESC key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && dialog.style.display === 'flex') {
+        closeDialog();
       }
     });
   }
 });
-
-  // Dark Mode Toggle
-  document.getElementById('dark-toggle').addEventListener('click', function(e){
-    e.preventDefault();
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('dark-mode', isDark ? '1' : '0');
-    document.getElementById('dark-icon').innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    document.getElementById('dark-text').textContent = isDark ? 'Light Mode' : 'Dark Mode';
-  });
-
-  // Restore Dark Mode
-  if (localStorage.getItem('dark-mode') === '1') {
-    document.body.classList.add('dark-mode');
-    document.getElementById('dark-icon').innerHTML = '<i class="fas fa-sun"></i>';
-    document.getElementById('dark-text').textContent = 'Light Mode';
-  }
-
-  // Font Size Controls
-  let fontSize = parseInt(localStorage.getItem('font-size') || '16', 10);
-  document.documentElement.style.fontSize = fontSize + 'px';
-
-  document.getElementById('font-increase').addEventListener('click', () => {
-    if (fontSize < 24) {
-      fontSize += 2;
-      document.documentElement.style.fontSize = fontSize + 'px';
-      localStorage.setItem('font-size', fontSize);
-    }
-  });
-
-  document.getElementById('font-decrease').addEventListener('click', () => {
-    if (fontSize > 12) {
-      fontSize -= 2;
-      document.documentElement.style.fontSize = fontSize + 'px';
-      localStorage.setItem('font-size', fontSize);
-    }
-  });
 </script>
