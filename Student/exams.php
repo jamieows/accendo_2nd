@@ -1,94 +1,115 @@
 <?php 
+session_start();
 require_once '../config/db.php'; 
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') { 
     header("Location: ../Auth/login.php"); 
     exit(); 
 }
+
+date_default_timezone_set('Asia/Manila');
 $now = date('Y-m-d H:i:s');
+$student_id = $_SESSION['user_id'];
 ?>
 <?php include 'includes/header.php'; ?>
 
 <div class="exams-container">
-    <!-- Page Header -->
     <header class="page-header" aria-labelledby="page-title">
-        <h1 id="page-title" class="page-title">Available Exams</h1>
-        <p class="page-subtitle">Take your exams during the scheduled time window.</p>
+        <h1 id="page-title" class="page-title">My Exams & Quizzes</h1>
+        <p class="page-subtitle">View upcoming and active assessments from your subjects</p>
     </header>
 
-    <!-- Exams Grid -->
-    <section class="exams-grid" aria-live="polite" id="examsList">
+    <section class="exams-grid" aria-live="polite">
         <?php
         $stmt = $pdo->prepare("
-            SELECT e.id, e.title, e.file_path, e.start_time, e.end_time, s.name AS subject
+            SELECT e.id, e.title, e.google_form_link, e.start_time, e.end_time, 
+                   s.name AS subject,
+                   u.first_name, u.last_name
             FROM exams e
             JOIN subjects s ON e.subject_id = s.id
-            JOIN student_subjects ss ON ss.subject_id = s.id
-            WHERE ss.student_id = ? 
-              AND ? BETWEEN e.start_time AND e.end_time
-            ORDER BY e.end_time ASC
+            JOIN users u ON e.teacher_id = u.id
+            WHERE e.subject_id IN (
+                SELECT subject_id FROM student_subjects WHERE student_id = ?
+            )
+            ORDER BY e.start_time DESC
         ");
-        $stmt->execute([$_SESSION['user_id'], $now]);
+        $stmt->execute([$student_id]);
         $exams = $stmt->fetchAll();
 
         if (empty($exams)) {
             echo '
-            <div class="empty-state" role="status" aria-live="polite">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <div class="empty-state">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
-                <p>No exams are currently available.</p>
-                <small>Check back during your exam schedule.</small>
+                <p><strong>No exams available yet</strong></p>
+                <small>Your teachers haven\'t uploaded any exams, or you\'re not enrolled in any subjects with exams.</small>
             </div>';
         } else {
             foreach ($exams as $e) {
-                $end = new DateTime($e['end_time']);
-                $nowObj = new DateTime();
-                $diff = $nowObj->diff($end);
+                $start = new DateTime($e['start_time']);
+                $end   = new DateTime($e['end_time']);
+                $now_dt = new DateTime();
 
-                $timeLeft = $diff->days > 0
-                    ? $diff->days . 'd ' . $diff->format('%hh %im')
-                    : $diff->format('%h' . ($diff->h == 1 ? ' hour' : ' hours') . ' %i min');
+                $is_upcoming = $now_dt < $start;
+                $is_active   = $now_dt >= $start && $now_dt <= $end;
+                $is_closed   = $now_dt > $end;
+
+                $status_text  = $is_upcoming ? 'Not Started' : ($is_active ? 'Take Now' : 'Closed');
+                $status_class = $is_upcoming ? 'warning' : ($is_active ? 'success' : 'expired');
+                $can_take     = $is_active && !empty($e['google_form_link']);
+
+                $display_time = $is_upcoming 
+                    ? 'Starts ' . $start->format('M j, Y \a\t g:i A')
+                    : 'Ends ' . $end->format('M j, Y \a\t g:i A');
 
                 $title   = htmlspecialchars($e['title']);
                 $subject = htmlspecialchars($e['subject']);
-                $endFmt  = $end->format('M j, Y \a\t g:i A');
-                $fileUrl = htmlspecialchars('../' . $e['file_path']);
-
-                echo "
-                <article class='exam-card' role='article'>
-                    <header class='card-header'>
-                        <div class='card-icon'>
-                            <svg width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
-                                <path d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.668 5.477 15.254 5 17 5s3.332.477 4.5 1.253v13C20.332 18.477 18.746 18 17 18s-3.332.477-4.5 1.253'/>
-                            </svg>
+                $teacher = htmlspecialchars(trim($e['first_name'] . ' ' . $e['last_name']));
+                $link    = htmlspecialchars($e['google_form_link']);
+                ?>
+                <article class="exam-card <?= $status_class ?>">
+                    <header class="card-header">
+                        <div class="card-icon">
+                            <?php if ($is_active): ?>
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                    <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            <?php else: ?>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            <?php endif; ?>
                         </div>
-                        <div class='card-meta'>
-                            <h3 class='card-title'>$title</h3>
-                            <p class='card-course'>$subject</p>
+                        <div class="card-meta">
+                            <h3 class="card-title"><?= $title ?></h3>
+                            <p class="card-course"><?= $subject ?> • <?= $teacher ?></p>
                         </div>
                     </header>
 
-                    <div class='card-body'>
-                        <p class='exam-schedule'><strong>Available until:</strong> $endFmt</p>
-                        <p class='time-remaining' aria-label='Time remaining for exam'>
-                            <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'>
-                                <circle cx='12' cy='12' r='10'/>
-                                <polyline points='12 6 12 12 16 14'/>
-                            </svg>
-                            <strong>$timeLeft</strong> left
-                        </p>
+                    <div class="card-body">
+                        <p class="exam-schedule"><strong><?= $display_time ?></strong></p>
+                        <span class="status-badge badge-<?= $status_class ?>"><?= $status_text ?></span>
                     </div>
 
-                    <footer class='card-footer'>
-                        <button 
-                            class='btn-take-exam' 
-                            data-exam-id='{$e['id']}' 
-                            data-file-url='$fileUrl'
-                            aria-label='Take exam: $title'>
-                            Take Exam
-                        </button>
+                    <footer class="card-footer">
+                        <?php if ($can_take): ?>
+                            <a href="<?= $link ?>" target="_blank" rel="noopener noreferrer" class="btn-take-exam active">
+                                Take Exam Now
+                            </a>
+                        <?php elseif ($is_upcoming): ?>
+                            <button class="btn-take-exam" disabled>Starts Soon</button>
+                        <?php else: ?>
+                            <button class="btn-take-exam" disabled>Exam Closed</button>
+                        <?php endif; ?>
                     </footer>
-                </article>";
+                </article>
+                <?php
             }
         }
         ?>
@@ -100,114 +121,115 @@ $now = date('Y-m-d H:i:s');
 
     :root {
         --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --text-muted: #64748b;
-        --accent: #059669; --accent-hover: #047857; --border: #e2e8f0;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-        --radius: 12px; --transition: all 0.2s ease; --focus-ring: 0 0 0 3px rgba(5,150,105,0.3);
+        --success: #10b981; --warning: #f59e0b; --expired: #ef4444;
+        --border: #e2e8f0; --shadow: 0 4px 12px rgba(0,0,0,0.08);
+        --radius: 16px; --primary: #7c3aed;
     }
     @media (prefers-color-scheme: dark) {
-        :root { --bg:#0f172a; --card:#1e293b; --text:#f1f5f9; --text-muted:#94a3b8; --border:#334155; --accent:#10b981; --accent-hover:#059669; }
+        :root { --bg:#0f172a; --card:#1e293b; --text:#f1f5f9; --text-muted:#94a3b8; --border:#334155; }
     }
 
-    *,*::before,*::after{box-sizing:border-box;}
-    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);margin:0;line-height:1.6;}
-    .exams-container{max-width:1000px;margin:0 auto;padding:2rem 1rem;}
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.6; }
+    .exams-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
 
-    .page-header{text-align:center;margin-bottom:2.5rem;}
-    .page-title{font-size:2rem;font-weight:700;margin:0 0 .5rem;}
-    .page-subtitle{color:var(--text-muted);font-size:1rem;margin:0;}
+    .page-header { text-align: center; margin-bottom: 3rem; }
+    .page-title { font-size: 2.2rem; font-weight: 700; margin: 0 0 .5rem; }
+    .page-subtitle { color: var(--text-muted); font-size: 1.1rem; }
 
-    .exams-grid{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));}
-
-    .exam-card{
-        background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-        overflow:hidden;box-shadow:var(--shadow-sm);transition:var(--transition);display:flex;flex-direction:column;
+    .exams-grid { 
+        display: grid; 
+        gap: 1.75rem; 
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
     }
-    .exam-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
 
-    .card-header{padding:1.25rem 1.25rem .75rem;display:flex;align-items:flex-start;gap:1rem;}
-    .card-icon{background:rgba(16,185,129,.1);color:var(--accent);padding:.5rem;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .card-icon svg{width:20px;height:20px;}
-    .card-meta{flex:1;}
-    .card-title{margin:0 0 .25rem;font-size:1.1rem;font-weight:600;}
-    .card-course{margin:0;font-size:.9rem;color:var(--text-muted);font-weight:500;}
-
-    .card-body{padding:0 1.25rem 1rem;flex-grow:1;}
-    .exam-schedule{margin:0 0 .75rem;font-size:.925rem;color:var(--text);}
-    .time-remaining{margin:0;font-size:.875rem;color:rgb(34,197,94);font-weight:600;display:flex;align-items:center;gap:.35rem;}
-    .time-remaining svg{flex-shrink:0;}
-
-    .card-footer{padding:1rem 1.25rem;border-top:1px solid var(--border);text-align:right;}
-    .btn-take-exam{
-        display:inline-block;padding:.65rem 1.25rem;background:var(--accent);color:#fff;
-        text-decoration:none;font-weight:600;font-size:.925rem;border-radius:8px;
-        transition:var(--transition);box-shadow:0 1px 2px rgba(0,0,0,.1);border:none;cursor:pointer;
+    .exam-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
     }
-    .btn-take-exam:hover{background:var(--accent-hover);transform:translateY(-1px);}
-    .btn-take-exam[disabled]{background:#94a3b8;cursor:not-allowed;opacity:.6;}
-    .btn-take-exam:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+    .exam-card:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
 
-    .empty-state{grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--text-muted);}
-    .empty-state svg{margin-bottom:1rem;opacity:.5;}
-    .empty-state small{display:block;margin-top:.5rem;font-size:.9rem;}
+    .card-header {
+        padding: 1.5rem 1.5rem 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        background: linear-gradient(135deg, rgba(124,58,237,.05), transparent);
+    }
+    .card-icon {
+        background: rgba(139,92,246,.15);
+        color: #8b5cf6;
+        padding: .75rem;
+        border-radius: 14px;
+        flex-shrink: 0;
+    }
+    .card-meta { flex: 1; }
+    .card-title { margin: 0 0 .4rem; font-size: 1.2rem; font-weight: 600; }
+    .card-course { margin: 0; font-size: .95rem; color: var(--text-muted); }
 
-    .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
-    :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+    .card-body { padding: 0 1.5rem 1rem; flex-grow: 1; }
+    .exam-schedule { margin: 0 0 .75rem; font-size: 1rem; }
+    .status-badge {
+        display: inline-block;
+        padding: .4rem .9rem;
+        border-radius: 50px;
+        font-size: .85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-warning { background: #fffbeb; color: #92400e; }
+    .badge-expired { background: #fee2e2; color: #991b1b; }
 
-    @media(max-width:640px){
-        .exams-grid{grid-template-columns:1fr;}
-        .card-header{flex-direction:column;align-items:flex-start;}
-        .card-icon{margin-bottom:.5rem;}
+    .card-footer {
+        padding: 1.25rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: rgba(249,250,251,.6);
+        text-align: right;
+    }
+    .btn-take-exam {
+        padding: .75rem 1.6rem;
+        font-weight: 600;
+        font-size: 1rem;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-take-exam.active {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 4px 12px rgba(124,58,237,.3);
+    }
+    .btn-take-exam.active:hover {
+        background: #6d28d9;
+        transform: translateY(-2px);
+    }
+    .btn-take-exam[disabled] {
+        background: #94a3b8;
+        color: #cbd5e1;
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+    .empty-state svg { margin-bottom: 1.5rem; }
+
+    @media (max-width: 640px) {
+        .exams-grid { grid-template-columns: 1fr; }
+        .card-header { flex-direction: column; align-items: flex-start; }
+        .card-icon { margin-bottom: .5rem; }
     }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const buttons = document.querySelectorAll('.btn-take-exam');
-
-    buttons.forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const examId   = btn.dataset.examId;
-            const fileUrl  = btn.dataset.fileUrl;
-            const original = btn.innerHTML;
-
-            // UI: show loading
-            btn.disabled = true;
-            btn.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 38 38" stroke="currentColor" style="animation:spin 1s linear infinite;">
-                    <g fill="none" fill-rule="evenodd"><g transform="translate(1 1)" stroke-width="2">
-                        <circle stroke-opacity=".5" cx="18" cy="18" r="18"/>
-                        <path d="M36 18c0-9.94-8.06-18-18-18"><animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur="1s" repeatCount="indefinite"/></path>
-                    </g></g>
-                </svg>
-                <span style="margin-left:.4rem;">Opening…</span>
-            `;
-
-            try {
-                const res = await fetch('api/take_exam.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ exam_id: examId })
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    // Open the exam file in a new tab
-                    window.open(fileUrl, '_blank', 'noopener,noreferrer');
-                } else {
-                    alert(data.message || 'Could not start the exam.');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Network error. Please try again.');
-            } finally {
-                // Restore button
-                btn.disabled = false;
-                btn.innerHTML = original;
-            }
-        });
-    });
-});
-</script>
 
 <?php include 'includes/footer.php'; ?>

@@ -1,5 +1,12 @@
 <!-- Teacher/includes/sidebar.php -->
 <aside id="sidebar" class="sidebar">
+  <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar" aria-expanded="true">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </button>
 
   <div class="logo">
     <span class="brand">Accendo</span>
@@ -8,193 +15,310 @@
 
   <nav>
     <a href="index.php" class="<?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : '' ?>">
-      <span class="icon"><i class="fas fa-tachometer-alt"></i></span>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zM13 21h8v-10h-8v10zM13 3v6h8V3h-8z"/></svg>
+      </span>
       <span class="label">Dashboard</span>
     </a>
 
     <a href="my_courses.php" class="<?= basename($_SERVER['PHP_SELF']) == 'my_courses.php' ? 'active' : '' ?>">
-      <span class="icon"><i class="fas fa-book-open"></i></span>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16l7-3 7 3V4c0-1.1-.9-2-2-2z"/></svg>
+      </span>
       <span class="label">My Courses</span>
     </a>
 
     <a href="assignments.php" class="<?= basename($_SERVER['PHP_SELF']) == 'assignments.php' ? 'active' : '' ?>">
-      <span class="icon"><i class="fas fa-tasks"></i></span>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M16 4h-1.5l-.71-1.42C13.6 1.22 13.32 1 12.99 1h-1.98c-.33 0-.61.22-.79.58L9.51 4H8C6.9 4 6 4.9 6 6v13c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM12 17.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 10.5 12 10.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+      </span>
       <span class="label">Assignments</span>
     </a>
 
     <a href="exams.php" class="<?= basename($_SERVER['PHP_SELF']) == 'exams.php' ? 'active' : '' ?>">
-      <span class="icon"><i class="fas fa-file-alt"></i></span>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM14 3.5L18.5 8H14V3.5zM8 8h8v2H8V8zM8 12h8v2H8v-2z"/></svg>
+      </span>
       <span class="label">Exams</span>
     </a>
 
     <a href="profile.php" class="<?= basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : '' ?>">
-      <span class="icon"><i class="fas fa-user"></i></span>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-9 1.7-9 5v3h18v-3c0-3.3-5.7-5-9-5z"/></svg>
+      </span>
       <span class="label">Profile</span>
     </a>
 
-    <!-- CONTROLS: Font Size + Dark Mode -->
-    <div class="sidebar-controls">
-      <div class="control-group">
-        <button id="font-decrease" class="control-btn" title="Smaller text">
-          <i class="fas fa-search-minus"></i>
-        </button>
-        <button id="font-increase" class="control-btn" title="Larger text">
-          <i class="fas fa-search-plus"></i>
-        </button>
-      </div>
+   
 
-      <button id="dark-toggle" class="control-btn full-width" title="Toggle dark mode">
-        <span id="dark-icon"><i class="fas fa-moon"></i></span>
-        <span id="dark-text" class="ms-2">Dark Mode</span>
-      </button>
-    </div>
-
-    <a href="../Auth/logout.php" class="logout-link">
-      <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
+    <!-- LOGOUT - Always at bottom -->
+    <a href="#" id="logoutLink" style="margin-top: auto;">
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M16 13v-2h-5V8l-4 4 4 4v-3h5zM20 3h-8v2h8v14h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+      </span>
       <span class="label">Logout</span>
     </a>
   </nav>
 </aside>
 
+<!-- Logout Confirmation Dialog -->
+<div id="logoutDialog" class="logout-dialog" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="logoutTitle">
+  <div class="dialog-overlay"></div>
+  <div class="dialog-content" tabindex="-1">
+    <h3 id="logoutTitle">Are you sure you want to log out?</h3>
+    <p>You'll need to sign in again to access Accendo.</p>
+    <div class="dialog-actions">
+      <button id="cancelLogout" class="btn btn-cancel">Cancel</button>
+      <button id="confirmLogout" class="btn btn-danger">Log Out</button>
+    </div>
+  </div>
+</div>
+
 <style>
-  :root {
-    --sidebar-width: 260px;
-    --icon-size: 38px;
-    --primary: #6d28d9;
-    --primary-light: #a78bfa;
-    --text: #1f2937;
-    --text-muted: #6b7280;
-    --bg: #ffffff;
-    --sidebar-bg: #ffffff;
-    --border: #e5e7eb;
-    --shadow: 0 10px 30px rgba(0,0,0,0.08);
-    --radius: 14px;
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-  .dark-mode {
-    --text: #f3f4f6;
-    --text-muted: #9ca3af;
-    --bg: #0f172a;
-    --sidebar-bg: #1e293b;
-    --border: #334155;
-    --shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
+:root {
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-heading: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  --sidebar-width: 220px;
+  --accent: #1e40af;
+  --muted: #6b7280;
+  --bg-dark: #0b111d;
+  --card-dark: #1b243a;
+  --text-light: #e6eef8;
+  --danger: #dc2626;
+}
 
-  /* ---------- BODY & MAIN CONTENT ---------- */
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-    transition: var(--transition);
-    margin: 0;
-    padding: 0;               /* <-- removed padding-left */
-  }
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--bg-dark);
+  border-right: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 8px;
+  gap: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+  transition: transform 0.3s ease;
+  z-index: 1100;
+  font-family: var(--font-primary);
+  overflow: hidden;
+}
 
-  .main-content {
-    margin-left: var(--sidebar-width);   /* <-- pushes content after sidebar */
-    padding: 24px;
-    min-height: 100vh;
-    box-sizing: border-box;
-  }
+.sidebar.hidden { 
+  transform: translateX(-100%); 
+}
 
-  /* ---------- SIDEBAR ---------- */
-  .sidebar {
-    position: fixed;
-    left: 0; top: 0; bottom: 0;
-    width: var(--sidebar-width);
-    background: var(--sidebar-bg);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    padding: 22px 18px;
-    box-shadow: var(--shadow);
-    z-index: 1100;
-    overflow-y: auto;
-  }
+/* Logo */
+.logo { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 2px; 
+  padding: 8px 10px; 
+}
+.logo .brand { 
+  font-weight: 700; 
+  font-size: 1.05rem; 
+  color: #f0f4ff;
+}
+.logo .tagline { 
+  font-size: 0.78rem; 
+  color: #a0aec0; 
+}
 
-  /* LOGO */
-  .logo { padding: 0 10px 20px; margin-bottom: 12px; line-height: 1.3; }
-  .logo .brand { font-weight: 800; font-size: 1.42rem; color: var(--primary); letter-spacing: -0.6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .logo .tagline { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Navigation */
+nav { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 6px; 
+  margin-top: 6px; 
+  flex: 1; 
+}
+nav a {
+  display: flex; 
+  align-items: center; 
+  gap: 12px;
+  padding: 10px; 
+  text-decoration: none; 
+  color: #cbd5e1;
+  border-radius: 8px; 
+  transition: all 0.2s ease;
+}
+nav a:hover { 
+  background: rgba(30,64,175,0.1); 
+  transform: translateX(4px); 
+}
+nav a.active { 
+  background: rgba(30,64,175,0.2); 
+  color: var(--accent); 
+  font-weight: 600;
+}
 
-  /* NAV */
-  nav { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 0 8px; }
-  nav a { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: var(--radius); color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: var(--transition); min-height: 52px; overflow: hidden; }
-  nav a .icon { width: var(--icon-size); height: var(--icon-size); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: var(--primary); flex-shrink: 0; }
-  nav a .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
-  nav a:hover { background: rgba(109, 40, 217, 0.1); transform: translateX(3px); }
-  nav a.active { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; box-shadow: 0 4px 14px rgba(109, 40, 217, 0.3); }
-  nav a.active .icon { color: white; }
+/* Icons */
+nav a .icon { 
+  width: 28px; 
+  height: 28px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: var(--accent); 
+}
+nav a .icon svg { 
+  width: 22px; 
+  height: 22px; 
+  fill: currentColor; 
+}
 
-  /* CONTROLS */
-  .sidebar-controls { margin-top: auto; padding: 20px 8px 8px; border-top: 1px solid var(--border); }
-  .control-group { display: flex; gap: 10px; margin-bottom: 14px; }
-  .control-btn { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: var(--radius); font-size: 0.87rem; font-weight: 600; cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; }
-  .control-btn:hover { background: var(--primary); color: white; transform: translateY(-1.5px); box-shadow: 0 6px 16px rgba(109, 40, 217, 0.25); }
-  .control-btn.full-width { justify-content: flex-start; font-size: 0.9rem; }
-  .logout-link { margin-top: 12px; color: #ef4444 !important; font-size: 0.94rem; }
-  .logout-link:hover { background: rgba(239, 68, 68, 0.1); }
+/* Toggle Button */
+.sidebar-toggle {
+  position: absolute; 
+  right: -18px; 
+  top: 12px;
+  width: 36px; 
+  height: 36px; 
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-dark); 
+  color: #f0f4ff;
+  cursor: pointer; 
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.sidebar-toggle:hover { 
+  transform: scale(1.05); 
+  background: #11172b; 
+}
 
-  /* ---------- RESPONSIVE (sidebar stays fixed) ---------- */
-  @media (max-width: 840px) {
-    .main-content { padding: 20px 16px; }
-    /* optional – shrink sidebar a bit on tiny screens */
-    .sidebar { width: 220px; }
-    :root { --sidebar-width: 220px; }
-  }
-  @media (max-width: 480px) {
-    .sidebar { width: 70px; padding: 22px 8px; }
-    .sidebar .label, .sidebar .logo .tagline { display: none; }
-    .sidebar nav a { justify-content: center; }
-    .sidebar .icon { margin: 0; }
-    :root { --sidebar-width: 70px; }
-  }
+/* Logout Dialog */
+.logout-dialog {
+  position: fixed; 
+  inset: 0; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  z-index: 10000; 
+  animation: fadeIn 0.3s ease;
+}
+
+.dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(5px);
+}
+
+.dialog-content {
+  position: relative;
+  background: var(--card-dark); 
+  padding: 1.8rem; 
+  border-radius: 16px;
+  width: 90%; 
+  max-width: 380px; 
+  text-align: center;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5); 
+  color: var(--text-light);
+}
+
+.dialog-content h3 { 
+  margin: 0 0 0.5rem; 
+  font-size: 1.35rem; 
+  font-weight: 600;
+}
+.dialog-content p { 
+  color: #9ca3af; 
+  margin: 0 0 1.5rem; 
+  font-size: 0.95rem; 
+}
+.dialog-actions { 
+  display: flex; 
+  gap: 1rem; 
+  justify-content: center; 
+}
+.dialog-actions .btn {
+  flex: 1; 
+  padding: 0.75rem; 
+  border: none; 
+  border-radius: 10px;
+  font-weight: 600; 
+  cursor: pointer; 
+  font-size: 0.95rem; 
+}
+.btn-cancel { 
+  background: #2a3552; 
+  color: var(--text-light); 
+}
+.btn-cancel:hover { background: #3c4a70; }
+.btn-danger { 
+  background: var(--danger); 
+  color: white; 
+}
+.btn-danger:hover { background: #b91c1c; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Responsive */
+@media (max-width: 768px) {
+  :root { --sidebar-width: 70px; }
+  .sidebar .logo, .sidebar .label, .sidebar .tagline { display: none; }
+  .sidebar { width: 70px; padding: 12px 8px; }
+  nav a { justify-content: center; padding: 12px; }
+  .sidebar-toggle { right: -14px; top: 16px; }
+}
 </style>
 
 <script>
-  // Load Font Awesome + Inter (only once)
-  if (!document.querySelector('link[href*="font-awesome"]')) {
-    const fa = document.createElement('link');
-    fa.rel = 'stylesheet';
-    fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css';
-    document.head.appendChild(fa);
-  }
-  if (!document.querySelector('link[href*="inter"]')) {
-    const inter = document.createElement('link');
-    inter.rel = 'stylesheet';
-    inter.href = 'https://rsms.me/inter/inter.css';
-    document.head.appendChild(inter);
+// Sidebar Toggle + Logout Dialog (100% working)
+document.addEventListener('DOMContentLoaded', function () {
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  const content = document.querySelector('.main-content') || document.querySelector('.content');
+
+  // Restore sidebar state
+  if (localStorage.getItem('sidebar-hidden') === '1') {
+    sidebar.classList.add('hidden');
+    if (content) content.style.marginLeft = '0';
   }
 
-  // Dark Mode
-  const darkToggle = document.getElementById('dark-toggle');
-  const darkIcon   = document.getElementById('dark-icon');
-  const darkText   = document.getElementById('dark-text');
+  toggleBtn?.addEventListener('click', () => {
+    sidebar.classList.toggle('hidden');
+    const hidden = sidebar.classList.contains('hidden');
+    localStorage.setItem('sidebar-hidden', hidden ? '1' : '0');
+    if (content) content.style.marginLeft = hidden ? '0' : 'var(--sidebar-width)';
+  });
 
-  if (localStorage.getItem('dark-mode') === '1') {
-    document.body.classList.add('dark-mode');
-    darkIcon.innerHTML = '<i class="fas fa-sun"></i>';
-    darkText.textContent = 'Light Mode';
-  }
+  // Logout Dialog
+  const logoutLink = document.getElementById('logoutLink');
+  const dialog = document.getElementById('logoutDialog');
+  const cancelBtn = document.getElementById('cancelLogout');
+  const confirmBtn = document.getElementById('confirmLogout');
+  const overlay = dialog?.querySelector('.dialog-overlay');
 
-  darkToggle?.addEventListener('click', (e) => {
+  logoutLink?.addEventListener('click', (e) => {
     e.preventDefault();
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('dark-mode', isDark ? '1' : '0');
-    darkIcon.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    darkText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    dialog.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
   });
 
-  // Font Size
-  let fontSize = parseInt(localStorage.getItem('font-size') || '16', 10);
-  document.documentElement.style.fontSize = fontSize + 'px';
+  const closeDialog = () => {
+    dialog.style.display = 'none';
+    document.body.style.overflow = '';
+  };
 
-  document.getElementById('font-increase')?.addEventListener('click', () => {
-    if (fontSize < 24) { fontSize += 2; document.documentElement.style.fontSize = fontSize + 'px'; localStorage.setItem('font-size', fontSize); }
+  cancelBtn?.addEventListener('click', closeDialog);
+  confirmBtn?.addEventListener('click', () => {
+    window.location.href = '../Auth/logout.php';
   });
-  document.getElementById('font-decrease')?.addEventListener('click', () => {
-    if (fontSize > 12) { fontSize -= 2; document.documentElement.style.fontSize = fontSize + 'px'; localStorage.setItem('font-size', fontSize); }
+  overlay?.addEventListener('click', closeDialog);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dialog.style.display === 'flex') closeDialog();
   });
+});
 </script>
