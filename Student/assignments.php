@@ -1,36 +1,49 @@
-    <?php require_once '../config/db.php';
-    if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
-        header("Location: ../Auth/login.php"); exit();
-    } ?>
-    <?php include 'includes/header.php'; ?>
+<?php 
+require_once '../config/db.php';
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
+    header("Location: ../Auth/login.php"); 
+    exit();
+}
+?>
+<?php include 'includes/header.php'; ?>
 
-    <div class="assignments-container">
-        <!-- Page Header -->
-        <header class="page-header" aria-labelledby="page-title">
-            <h1 id="page-title" class="page-title">Assignments</h1>
-            <p class="page-subtitle">View and submit your coursework — accessible and voice-enabled.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Assignments</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="assignments-page">
+    <div class="container">
+        <header class="page-header">
+            <h1 class="page-title">My Assignments</h1>
+            <p class="page-desc">Submit work • Track progress</p>
         </header>
 
-        <!-- Search & Filter Bar -->
-        <div class="controls-bar">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search by title or subject..." aria-label="Search assignments">
-                <button class="btn-search" aria-label="Search">Search</button>
+        <div class="filters-bar">
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" placeholder="Search..." aria-label="Search assignments">
+                <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="m21 21-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2"/></svg>
             </div>
-            <select id="filterStatus" class="filter-select" aria-label="Filter by status">
+            <select id="filterStatus" class="status-filter">
                 <option value="">All</option>
                 <option value="pending">Pending</option>
                 <option value="submitted">Submitted</option>
-                <option value="graded">Graded</option>
+                <option value="overdue">Overdue</option>
             </select>
         </div>
 
-        <!-- Assignments List -->
-        <section class="assignments-list" aria-live="polite">
+        <div class="assignments-grid" id="assignmentsList">
             <?php
             $stmt = $pdo->prepare("
-                SELECT a.id, a.title, a.description, a.due_date, a.file_required, s.name AS subject,
-                    sub.id AS submission_id, sub.file_path AS submitted_file, sub.grade, sub.feedback, sub.submitted_at
+                SELECT a.id, a.title, a.description, a.due_date, a.file_required, 
+                       s.name AS subject,
+                       sub.id AS submission_id, sub.file_path AS submitted_file, 
+                       sub.grade, sub.submitted_at
                 FROM assignments a
                 JOIN subjects s ON a.subject_id = s.id
                 JOIN student_subjects ss ON ss.subject_id = s.id
@@ -42,168 +55,247 @@
             $assignments = $stmt->fetchAll();
 
             if (empty($assignments)) {
-                echo '<div class="empty-state"><p>No assignments found. Check back later or contact your teacher.</p></div>';
-            } else {
-                foreach ($assignments as $a) {
-                    $isPastDue = new DateTime($a['due_date']) < new DateTime();
-                    $status = $a['submission_id']
-                        ? ($a['grade'] !== null ? 'graded' : 'submitted')
-                        : ($isPastDue ? 'overdue' : 'pending');
-                    $statusLabel = ucfirst($status);
-                    $statusColor = match($status) {
-                        'pending' => '#f59e0b',
-                        'submitted' => '#3b82f6',
-                        'graded' => '#10b981',
-                        'overdue' => '#ef4444',
-                    };
-                    $dueDate = (new DateTime($a['due_date']))->format('M j, Y \a\t g:i A');
-                    $subject = htmlspecialchars($a['subject']);
-                    $title = htmlspecialchars($a['title']);
-                    $desc = htmlspecialchars($a['description'] ?? 'No description provided.');
+                echo '<div class="empty-state"><div class="empty-icon">No assignments</div><p>All caught up!</p></div>';
+            }
 
-                    echo "<article class='assignment-card' data-status='$status' data-subject='$subject' data-title='$title'>
-                        <header class='card-header'>
-                            <div class='assignment-info'>
-                                <h3 class='assignment-title'>$title</h3>
-                                <p class='assignment-meta'>
-                                    <span class='subject'>$subject</span> • <span class='due-date'>Due: $dueDate</span>
-                                </p>
-                            </div>
-                            <span class='status-badge' style='background:$statusColor;' aria-label='Status: $statusLabel'>$statusLabel</span>
-                        </header>
-                        <div class='assignment-body'>
-                            <p class='assignment-desc'>$desc</p>
-                            <p class='file-requirement'>File required: " . ($a['file_required'] ? 'Yes' : 'No') . "</p>
+            foreach ($assignments as $a) {
+                $dueDate = new DateTime($a['due_date']);
+                $now = new DateTime();
+                $isOverdue = $dueDate < $now && !$a['submission_id'];
+
+                $status = $a['submission_id']
+                    ? ($a['grade'] !== null ? 'graded' : 'submitted')
+                    : ($isOverdue ? 'overdue' : 'pending');
+
+                $filterStatus = $status === 'graded' ? 'submitted' : $status;
+
+                // Status badges with text + color
+                $statusConfig = [
+                    'pending'   => ['text' => 'Pending',   'color' => '#f59e0b'],
+                    'submitted' => ['text' => 'Submitted', 'color' => '#3b82f6'],
+                    'graded'    => ['text' => 'Graded',    'color' => '#10b981'],
+                    'overdue'   => ['text' => 'Overdue',   'color' => '#ef4444'],
+                ];
+
+                $badge = $statusConfig[$status];
+                $dueStr = $dueDate->format('M j, Y');
+
+                echo "
+                <article class='assignment-card' data-status='$filterStatus' data-title='" . htmlspecialchars($a['title']) . "' data-subject='" . htmlspecialchars($a['subject']) . "'>
+                    <div class='card-header'>
+                        <div class='info'>
+                            <div class='subject'>" . htmlspecialchars($a['subject']) . "</div>
+                            <h2 class='title'>" . htmlspecialchars($a['title']) . "</h2>
+                            <div class='due'>Due $dueStr</div>
                         </div>
-                        <footer class='card-footer'>"
-                            . ($a['submission_id']
-                                ? ($a['grade'] !== null
-                                    ? "<div class='grade-display'>Grade: <strong>{$a['grade']}/100</strong></div>"
-                                    : "<div class='submitted-info'>Submitted on " . (new DateTime($a['submitted_at']))->format('M j, Y \a\t g:i A') . "</div>")
-                                : ($isPastDue
-                                    ? "<span class='overdue-notice'>Past due</span>"
-                                    : "<button class='btn-submit' onclick='openSubmitModal({$a['id']})'>Submit</button>"))
-                        . "</footer>
-                    </article>";
-                }
+                        <span class='status-badge' style='background:{$badge['color']}'>
+                            {$badge['text']}
+                        </span>
+                    </div>
+
+                    <div class='card-body'>
+                        <p class='desc'>" . (strlen($a['description'] ?? '') > 110 
+                            ? htmlspecialchars(substr($a['description'], 0, 110)) . '...' 
+                            : htmlspecialchars($a['description'] ?? 'No description')) . "</p>
+                    </div>
+
+                    <div class='card-footer'>
+                        " . ($a['submission_id'] ? "
+                            <div class='meta'>
+                                <small>Submitted " . (new DateTime($a['submitted_at']))->format('M j') . "</small>
+                                " . ($a['grade'] !== null ? "<strong class='grade'>{$a['grade']}/100</strong>" : "") . "
+                            </div>
+                            <button class='btn-view' onclick='openFileModal(\"{$a['submitted_file']}\")'>View</button>
+                        " : ($isOverdue ? 
+                            "<span class='overdue'>Past Due</span>" : 
+                            "<button class='btn-submit' onclick='openSubmitModal({$a['id']})'>Submit</button>"
+                        )) . "
+                    </div>
+                </article>";
             }
             ?>
-        </section>
-    </div>
-
-    <!-- Submit Modal -->
-    <dialog id="submitModal" class="modal">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h3>Submit Assignment</h3>
-                <button class="btn-close" onclick="closeSubmitModal()" aria-label="Close">Close</button>
-            </header>
-            <form id="submitForm" enctype="multipart/form-data" method="POST" action="api/submit_assignment.php">
-                <input type="hidden" name="assignment_id" id="assignmentId">
-                <div class="form-group">
-                    <label for="fileUpload">Upload File (PDF, DOC, Image)</label>
-                    <input type="file" id="fileUpload" name="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" required>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Submit</button>
-                    <button type="button" class="btn-secondary" onclick="closeSubmitModal()">Cancel</button>
-                </div>
-            </form>
         </div>
-    </dialog>
+    </div>
+</div>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --text-muted: #64748b; --accent: #2563eb; --accent-hover: #1d4ed8; --border: #e2e8f0; --shadow-sm: 0 1px 3px rgba(0,0,0,0.1); --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1); --radius: 12px; --transition: all 0.2s ease; --focus: 0 0 0 3px rgba(37, 99, 235, 0.3); }
-        @media (prefers-color-scheme: dark) { :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155; } }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; margin: 0; }
-        .assignments-container { max-width: 1000px; margin: 0 auto; padding: 28px 20px; }
-        .page-header { margin-bottom: 32px; text-align: center; }
-        .page-title { font-size: 1.875rem; font-weight: 700; margin: 0 0 8px 0; color: var(--text); }
-        .page-subtitle { margin: 0; color: var(--text-muted); font-size: 1rem; }
-        .controls-bar { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-        .search-box { flex: 1; min-width: 250px; display: flex; gap: 8px; }
-        .search-box input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 1rem; }
-        .btn-search, .filter-select { padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 0.925rem; cursor: pointer; }
-        .btn-search { background: var(--accent); color: white; border: none; }
-        .btn-search:hover { background: var(--accent-hover); }
-        .assignment-card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow-md); border: 1px solid var(--border); transition: var(--transition); }
-        .assignment-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
-        .assignment-title { font-size: 1.2rem; font-weight: 600; margin: 0; color: var(--text); }
-        .assignment-meta { margin: 4px 0 0; font-size: 0.875rem; color: var(--text-muted); }
-        .status-badge { color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-        .assignment-body { margin: 16px 0; }
-        .assignment-desc { margin: 0 0 8px 0; color: var(--text); }
-        .file-requirement { font-size: 0.875rem; color: var(--text-muted); margin: 0; }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
-        .btn-submit { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; }
-        .btn-submit:hover { background: var(--accent-hover); }
-        .grade-display, .submitted-info { font-size: 0.925rem; color: var(--text-muted); }
-        .grade-display strong { color: #10b981; font-weight: 600; }
-        .overdue-notice { color: #ef4444; font-weight: 600; font-size: 0.925rem; }
-        .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); background: var(--card); border-radius: var(--radius); border: 1px dashed var(--border); }
-        .modal { border: none; border-radius: var(--radius); padding: 0; max-width: 500px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .modal::backdrop { background: rgba(0,0,0,0.5); }
-        .modal-content { padding: 24px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .modal-header h3 { margin: 0; font-size: 1.25rem; font-weight: 600; }
-        .btn-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
-        .form-group input[type="file"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); }
-        .form-actions { display: flex; gap: 12px; justify-content: flex-end; }
-        .btn-primary { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer; }
-        .btn-primary:hover { background: var(--accent-hover); }
-        .btn-secondary { background: var(--text-muted); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-        @media (max-width: 768px) { .controls-bar { flex-direction: column; } .card-header, .card-footer { flex-direction: column; align-items: stretch; } .status-badge { align-self: flex-start; } }
-        @media (prefers-contrast: high) { .assignment-card { border-width: 2px; } }
-    </style>
+<!-- Submit Modal -->
+<dialog id="submitModal" class="modal">
+    <div class="modal-content">
+        <header><h2>Submit Assignment</h2><button onclick="closeSubmitModal()" class="close">×</button></header>
+        <form id="submitForm" enctype="multipart/form-data" method="POST" action="api/submit_assignment.php">
+            <input type="hidden" name="assignment_id" id="assignmentId">
+            <div class="form-group">
+                <label>Upload File <span class="req">*</span></label>
+                <input type="file" name="file" required accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn-primary">Submit</button>
+                <button type="button" onclick="closeSubmitModal()" class="btn-cancel">Cancel</button>
+            </div>
+        </form>
+    </div>
+</dialog>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const searchInput = document.getElementById('searchInput');
-            const filterStatus = document.getElementById('filterStatus');
-            const cards = document.querySelectorAll('.assignment-card');
-            const modal = document.getElementById('submitModal');
-            const form = document.getElementById('submitForm');
+<!-- File Viewer Modal -->
+<dialog id="fileModal" class="modal modal-large">
+    <div class="modal-content">
+        <header><h2>Submitted File</h2><button onclick="closeFileModal()" class="close">×</button></header>
+        <div id="fileViewer" class="viewer"></div>
+    </div>
+</dialog>
 
-            function filterAssignments() {
-                const query = searchInput.value.toLowerCase();
-                const status = filterStatus.value;
-                cards.forEach(card => {
-                    const title = card.dataset.title.toLowerCase();
-                    const subject = card.dataset.subject.toLowerCase();
-                    const cardStatus = card.dataset.status;
-                    const matchesSearch = title.includes(query) || subject.includes(query);
-                    const matchesStatus = !status || cardStatus === status;
-                    card.style.display = matchesSearch && matchesStatus ? 'block' : 'none';
-                });
-            }
-            searchInput.addEventListener('input', filterAssignments);
-            filterStatus.addEventListener('change', filterAssignments);
+<style>
+    :root {
+        --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b;
+        --primary: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+        --border: #e2e8f0; --radius: 14px; --shadow: 0 6px 16px rgba(0,0,0,0.09);
+    }
+    @media (prefers-color-scheme: dark) {
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; }
+    }
 
-            window.openSubmitModal = function(id) {
-                document.getElementById('assignmentId').value = id;
-                modal.showModal();
-            };
-            window.closeSubmitModal = function() {
-                modal.close();
-                form.reset();
-            };
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); line-height:1.5; }
 
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                fetch(this.action, { method: 'POST', body: formData })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) location.reload();
-                        else alert(data.message || 'Submission failed.');
-                    })
-                    .catch(() => alert('Error submitting assignment.'));
-            });
+    .container { max-width: 1240px; margin: 0 auto; padding: 1.5rem 1rem; }
+
+    .page-header { text-align: center; margin-bottom: 2rem; }
+    .page-title { font-size: 2.2rem; font-weight: 700; }
+    .page-desc { font-size: 1rem; color: var(--muted); }
+
+    .filters-bar { display: flex; gap: 1rem; margin-bottom: 1.8rem; flex-wrap: wrap; align-items: center; }
+    .search-wrapper { position: relative; flex: 1; min-width: 240px; }
+    .search-wrapper input {
+        width: 100%; padding: 0.75rem 0.75rem 0.75rem 2.5rem; border: 1px solid var(--border);
+        border-radius: 12px; background: var(--card); font-size: 0.95rem;
+    }
+    .search-wrapper input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    .search-icon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--muted); }
+
+    .status-filter {
+        padding: 0.75rem 1.2rem; border: 1px solid var(--border); border-radius: 12px;
+        background: var(--card); font-size: 0.95rem;
+    }
+
+    .assignments-grid { display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+
+    .assignment-card {
+        background: var(--card); border-radius: var(--radius); overflow: hidden;
+        box-shadow: var(--shadow); border: 1px solid var(--border);
+        transition: all 0.2s;
+    }
+    .assignment-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+
+    .card-header { padding: 1.1rem 1.3rem 0.8rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .subject { font-size: 0.85rem; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 0.8px; }
+    .title { font-size: 1.25rem; font-weight: 600; margin: 0.3rem 0; line-height: 1.3; }
+    .due { font-size: 0.85rem; color: var(--muted); }
+
+    .status-badge {
+        padding: 0.45rem 0.9rem; border-radius: 20px; color: white;
+        font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .card-body { padding: 0 1.3rem 1rem; }
+    .desc { font-size: 0.9rem; color: var(--muted); line-height: 1.5; }
+
+    .card-footer {
+        padding: 1rem 1.3rem; background: rgba(0,0,0,0.025); border-top: 1px solid var(--border);
+        display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;
+    }
+    .grade { color: var(--success); font-weight: 700; font-size: 1rem; margin-left: 0.5rem; }
+    .overdue { color: var(--danger); font-weight: 600; }
+
+    .btn-submit, .btn-view {
+        padding: 0.55rem 1.1rem; border: none; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+    }
+    .btn-submit { background: var(--primary); color: white; }
+    .btn-view { background: #dbeafe; color: var(--primary); }
+
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--muted); }
+    .empty-icon { font-size: 3.5rem; margin-bottom: 0.5rem; }
+
+    dialog { border: 0; border-radius: var(--radius); max-width: 480px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+    dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); }
+    .modal-large { max-width: 860px; }
+    .modal-content { background: var(--card); border-radius: var(--radius); }
+    header { padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    header h2 { font-size: 1.35rem; font-weight: 600; }
+    .close { background:none; border:none; font-size:2rem; cursor:pointer; color:var(--muted); }
+
+    .form-group { padding: 1.5rem; }
+    .form-group label { font-weight: 600; margin-bottom: 0.5rem; display: block; }
+    .req { color: var(--danger); }
+    input[type=file] { width:100%; padding:1rem; border:2px dashed var(--border); border-radius:12px; background:var(--bg); }
+
+    .actions { padding: 1.2rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 1rem; justify-content: flex-end; background: rgba(0,0,0,0.02); }
+    .btn-primary { background: var(--primary); color: white; padding: 0.7rem 1.5rem; border: none; border-radius: 10px; font-weight: 600; }
+    .btn-cancel { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 0.7rem 1.3rem; border-radius: 10px; }
+
+    .viewer { height: 70vh; background: #000; }
+    .viewer iframe, .viewer img, .viewer video { width:100%; height:100%; border:none; }
+
+    @media (max-width: 640px) {
+        .filters-bar { flex-direction: column; align-items: stretch; }
+        .assignments-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const search = document.getElementById('searchInput');
+    const filter = document.getElementById('filterStatus');
+    const cards = document.querySelectorAll('.assignment-card');
+
+    const update = () => {
+        const q = search.value.toLowerCase().trim();
+        const s = filter.value;
+        cards.forEach(c => {
+            const matchQ = c.dataset.title.toLowerCase().includes(q) || c.dataset.subject.toLowerCase().includes(q);
+            const matchS = !s || c.dataset.status === s;
+            c.style.display = matchQ && matchS ? '' : 'none';
         });
-    </script>
+    };
+    search.addEventListener('input', update);
+    filter.addEventListener('change', update);
 
-    <?php include 'includes/footer.php'; ?>
+    window.openSubmitModal = id => { 
+        document.getElementById('assignmentId').value = id; 
+        document.getElementById('submitModal').showModal(); 
+    };
+    window.closeSubmitModal = () => { 
+        document.getElementById('submitModal').close(); 
+        document.getElementById('submitForm').reset(); 
+    };
+
+    window.openFileModal = path => {
+        const ext = path.split('.').pop().toLowerCase();
+        let html = '';
+        if (ext === 'pdf') html = `<iframe src="${path}"></iframe>`;
+        else if (['png','jpg','jpeg','gif'].includes(ext)) html = `<img src="${path}">`;
+        else if (['mp4','webm'].includes(ext)) html = `<video src="${path}" controls></video>`;
+        else if (['doc','docx'].includes(ext)) html = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(path)}"></iframe>`;
+        else html = `<p style="color:#e2e8f0;text-align:center;padding:3rem;"><a href="${path}" target="_blank" style="color:#60a5fa;">Download File</a></p>`;
+        document.getElementById('fileViewer').innerHTML = html;
+        document.getElementById('fileModal').showModal();
+    };
+    window.closeFileModal = () => { 
+        document.getElementById('fileModal').close(); 
+        document.getElementById('fileViewer').innerHTML = ''; 
+    };
+
+    document.getElementById('submitForm').onsubmit = async e => {
+        e.preventDefault();
+        const res = await fetch('api/submit_assignment.php', { method: 'POST', body: new FormData(e.target) });
+        const data = await res.json();
+        if (data.success) location.reload();
+        else alert(data.message || 'Submission failed');
+    };
+
+    document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => e.target === d && d.close()));
+});
+</script>
+
+<?php include 'includes/footer.php'; ?>
+</body>
+</html>

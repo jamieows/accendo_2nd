@@ -1,5 +1,6 @@
 <?php
-require_once '../../config/db.php';
+session_start();
+require_once '../config/db.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
@@ -28,7 +29,7 @@ if (!$stmt->fetch()) {
     exit;
 }
 
-// Record that student took the exam (optional, depending on your needs)
+// Record attempt
 $stmt = $pdo->prepare("INSERT IGNORE INTO exam_attempts (exam_id, student_id, taken_at) VALUES (?, ?, NOW())");
 $stmt->execute([$examId, $userId]);
 

@@ -23,23 +23,35 @@ if ($stmt->fetch()) {
     exit;
 }
 
-if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
-    $ext = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
-    $allowed = ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg'];
-    if (!in_array(strtolower($ext), $allowed)) {
+$file = $_FILES['file'];
+if ($file['error'] === UPLOAD_ERR_OK) {
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowed = ['pdf','doc','docx','txt','png','jpg','jpeg','gif','mp4','webm','ogg'];
+
+    if (!in_array($ext, $allowed)) {
         echo json_encode(['success' => false, 'message' => 'Invalid file type']);
         exit;
     }
 
-    $path = "../../uploads/sub_" . uniqid() . "." . $ext;
-    if (move_uploaded_file($_FILES['file']['tmp_name'], $path)) {
+    // Create uploads folder if it doesn't exist
+    $uploadDir = "../../uploads/";
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+    // Create a safe unique filename
+    $filename = "sub_{$userId}_" . uniqid() . "." . $ext;
+    $filepath = $uploadDir . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $filepath)) {
+        // Save relative path in DB (without ../../)
+        $relativePath = "uploads/" . $filename;
+
         $stmt = $pdo->prepare("INSERT INTO submissions (assignment_id, student_id, file_path, submitted_at) VALUES (?, ?, ?, NOW())");
-        $stmt->execute([$assignmentId, $userId, $path]);
-        echo json_encode(['success' => true, 'message' => 'Assignment submitted successfully']);
+        $stmt->execute([$assignmentId, $userId, $relativePath]);
+
+        echo json_encode(['success' => true, 'message' => 'Assignment submitted successfully', 'file' => $relativePath]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to save file']);
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'File upload error']);
 }
-?>
