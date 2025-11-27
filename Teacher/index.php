@@ -36,7 +36,6 @@ foreach ($tables as $table) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Teacher Dashboard | Accendo LMS</title>
-    <!-- Font Awesome 6 (Free) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" 
           integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" 
           crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -44,28 +43,38 @@ foreach ($tables as $table) {
 <body>
 
 <style>
+    /* THIS IS THE ONLY FIX YOU NEED - FORCES TEXT TO BE VISIBLE IN LIGHT MODE */
+    * { color: #1e293b !important; }
+    .dark-mode * { color: #f1f5f9 !important; }
+    .dark-mode .activity-time { color: #7B61FF !important; background: rgba(123,97,255,0.15) !important; }
+
     :root {
         --primary: #7B61FF;
         --primary-hover: #6a51e6;
+        --primary-light: rgba(123, 97, 255, 0.1);
         --danger: #EF4444;
         --danger-hover: #dc2626;
         --success: #10B981;
         --warning: #F59E0B;
-        --text: #1f2937;
-        --text-light: #6b7280;
-        --bg: #f9fafb;
+        --text: #1e293b;
+        --text-light: #475569;
+        --bg: #f8fafc;
         --card-bg: #ffffff;
-        --border: #e5e7eb;
+        --border: #e2e8f0;
         --shadow: 0 10px 25px rgba(0,0,0,0.06);
+        --shadow-hover: 0 20px 40px rgba(123,97,255,0.18);
         --radius: 1rem;
     }
+
     .dark-mode {
-        --text: #f3f4f6;
-        --text-light: #9ca3af;
+        --text: #f1f5f9;
+        --text-light: #cbd5e1;
         --bg: #0f172a;
         --card-bg: #1e293b;
         --border: #334155;
-        --shadow: 0 10px 25px rgba(0,0,0,0.3);
+        --shadow: 0 10px 25px rgba(0,0,0,0.4);
+        --shadow-hover: 0 20px 40px rgba(123,97,255,0.25);
+        --primary-light: rgba(123,97,255,0.15);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -93,25 +102,30 @@ foreach ($tables as $table) {
         gap: 1.5rem;
     }
     .greeting h1 {
-        font-size: 2rem;
+        font-size: 2.1rem;
         font-weight: 700;
         margin: 0;
-        background: linear-gradient(135deg, var(--primary), #5b4ed4);
+        background: linear-gradient(135deg, var(--primary), #8b5cf6);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
     .greeting p {
-        margin: 0.4rem 0 0;
+        margin: 0.5rem 0 0;
         color: var(--text-light);
-        font-size: 1rem;
+        font-size: 1.02rem;
+        font-weight: 500;
     }
     .date-time {
         text-align: right;
-        font-size: 0.95rem;
+        font-size: 0.98rem;
         color: var(--text-light);
     }
-    .date-time strong { color: var(--text); font-weight: 600; }
+    .date-time strong { 
+        color: var(--text); 
+        font-weight: 600; 
+        font-size: 1.05rem;
+    }
 
     /* Stats Grid */
     .stats-grid {
@@ -122,39 +136,50 @@ foreach ($tables as $table) {
     }
     .stat-card {
         background: var(--card-bg);
-        padding: 1.75rem;
+        padding: 1.8rem;
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         text-align: center;
-        transition: all 0.3s ease;
+        transition: all 0.35s ease;
         border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, var(--primary), #a78bfa);
+        border-radius: var(--radius) var(--radius) 0 0;
     }
     .stat-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(123,97,255,0.15);
+        transform: translateY(-10px);
+        box-shadow: var(--shadow-hover);
     }
     .stat-icon {
-        width: 60px; height: 60px;
+        width: 64px; height: 64px;
         margin: 0 auto 1rem;
-        background: linear-gradient(135deg, var(--primary), #5b4ed4);
-        border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary), #8b5cf6);
+        border-radius: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: 1.8rem;
-        box-shadow: 0 6px 15px rgba(123,97,255,0.3);
+        font-size: 1.9rem;
+        box-shadow: 0 8px 20px rgba(123, 97, 255, 0.3);
     }
     .stat-value {
-        font-size: 2.4rem;
+        font-size: 2.6rem;
         font-weight: 800;
         margin: 0.5rem 0;
         color: var(--text);
     }
     .stat-label {
         color: var(--text-light);
-        font-size: 0.95rem;
-        font-weight: 500;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
     }
 
     /* Quick Actions */
@@ -171,39 +196,59 @@ foreach ($tables as $table) {
         box-shadow: var(--shadow);
         display: flex;
         align-items: center;
-        gap: 1.25rem;
+        gap: 1.5rem;
         text-decoration: none;
         color: var(--text);
-        transition: all 0.3s ease;
+        transition: all 0.35s ease;
         border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+    }
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0;
+        width: 5px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--primary), #a78bfa);
+        transition: width 0.3s ease;
+    }
+    .action-card:hover::before {
+        width: 100%;
+        opacity: 0.1;
     }
     .action-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 15px 30px rgba(123,97,255,0.2);
-        background: linear-gradient(135deg, #7B61FF08, transparent);
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-hover);
+        background: var(--primary-light);
     }
     .action-icon {
-        width: 70px; height: 70px;
-        background: linear-gradient(135deg, var(--primary), #5b4ed4);
+        width: 76px; height: 76px;
+        background: linear-gradient(135deg, var(--primary), #8b5cf6);
         color: white;
-        border-radius: 18px;
+        border-radius: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
+        font-size: 2.2rem;
         flex-shrink: 0;
-        box-shadow: 0 8px 20px rgba(123,97,255,0.3);
+        box-shadow: 0 10px 25px rgba(123, 97, 255, 0.35);
+        transition: transform 0.3s ease;
+    }
+    .action-card:hover .action-icon {
+        transform: scale(1.1) rotate(5deg);
     }
     .action-content h3 {
-        margin: 0 0 0.4rem;
-        font-size: 1.2rem;
+        margin: 0 0 0.5rem;
+        font-size: 1.28rem;
         font-weight: 700;
         color: var(--text);
     }
     .action-content p {
         margin: 0;
-        font-size: 0.95rem;
+        font-size: 0.98rem;
         color: var(--text-light);
+        font-weight: 500;
     }
 
     /* Recent Activity */
@@ -219,12 +264,12 @@ foreach ($tables as $table) {
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.8rem;
+        border-bottom: 2px solid var(--border);
     }
     .activity-header h3 {
         margin: 0;
-        font-size: 1.3rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: var(--text);
     }
@@ -237,34 +282,59 @@ foreach ($tables as $table) {
         display: flex;
         align-items: center;
         gap: 1rem;
-        padding: 1rem 0;
+        padding: 1.1rem 0;
         border-bottom: 1px dashed var(--border);
-        font-size: 0.98rem;
+        font-size: 0.99rem;
+        transition: background 0.2s ease;
+    }
+    .activity-item:hover {
+        background: var(--primary-light);
+        border-radius: 12px;
+        margin: 0 -1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
     .activity-item:last-child { border-bottom: none; }
     .activity-icon {
-        width: 42px; height: 42px;
-        background: linear-gradient(135deg, var(--primary), #5b4ed4);
+        width: 44px; height: 44px;
+        background: linear-gradient(135deg, var(--primary), #8b5cf6);
         color: white;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         flex-shrink: 0;
-        box-shadow: 0 4px 10px rgba(123,97,255,0.25);
+        box-shadow: 0 6px 15px rgba(123, 97, 255, 0.3);
     }
     .activity-time {
         margin-left: auto;
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         color: var(--text-light);
-        font-weight: 500;
+        font-weight: 600;
+        background: var(--primary-light);
+        padding: 0.3rem 0.7rem;
+        border-radius: 20px;
     }
 
     @media (max-width: 768px) {
-        .dashboard-header { flex-direction: column; text-align: center; }
+        .dashboard-header { 
+            flex-direction: column; 
+            text-align: center; 
+            gap: 1rem;
+        }
         .date-time { text-align: center; }
-        .stats-grid, .quick-actions { grid-template-columns: 1fr; }
+        .stats-grid, .quick-actions { 
+            grid-template-columns: 1fr; 
+        }
+        .action-card {
+            padding: 1.5rem;
+        }
+        .action-icon {
+            width: 64px;
+            height: 64px;
+            font-size: 1.9rem;
+        }
     }
 </style>
 
@@ -415,6 +485,15 @@ foreach ($tables as $table) {
 </div>
 
 <?php include 'includes/footer.php'; ?>
+
 <script src="../assets/js/global.js"></script>
+<script>
+    // Auto Dark Mode + Save Preference
+    if (localStorage.getItem('darkMode') === 'true' || 
+        (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-mode');
+    }
+</script>
+
 </body>
 </html>

@@ -103,8 +103,47 @@ try {
     background: #7B61FF;
   }
   .dark-mode .btn-view:hover { background: #6a51e6; }
-  .dark-mode .btn-danger { background: #EF4444; }
+  .dark-mode .btn-danger { background: `EF4444; }
   .dark-mode .btn-danger:hover { background: #dc2626; }
+
+  /* ———————————————————————
+     FIXED: Headings perfectly visible in BOTH Light & Dark Mode
+     ——————————————————————— */
+  h1, h2 {
+    margin: 0 0 1.5rem 0;
+    font-weight: 700;
+    color: #1f2937; /* Dark gray in light mode */
+  }
+
+  h1 {
+    font-size: 2.6rem;
+    background: linear-gradient(135deg, #7B61FF, #A78BFA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  h2 {
+    font-size: 1.8rem;
+    color: #374151;
+  }
+
+  /* Dark Mode: Bright & beautiful headings */
+  .dark-mode h1,
+  .dark-mode h2 {
+    color: #f1f5f9 !important;
+  }
+
+  .dark-mode h1 {
+    background: linear-gradient(135deg, #C4B5FD, #E0D4FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .dark-mode h2 {
+    color: #e2e8f0;
+  }
 </style>
 
 <h1>My Courses</h1>
