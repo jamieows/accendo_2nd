@@ -30,7 +30,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$userId]);
 $total_exams = $stmt->fetchColumn();
 
-// Missing Submissions
+// MISSING SUBMISSIONS: Unsubmitted assignments + Untaken active/upcoming exams
 $stmt = $pdo->prepare("
     SELECT COUNT(*) 
     FROM assignments a
@@ -40,60 +40,102 @@ $stmt = $pdo->prepare("
     WHERE ss.student_id = ? AND sub.id IS NULL
 ");
 $stmt->execute([$userId, $userId]);
-$missing_submissions = $stmt->fetchColumn();
+$missing_assignments = $stmt->fetchColumn();
 
-// Upcoming Deadlines
 $stmt = $pdo->prepare("
-    SELECT a.title, a.due_date, s.name AS subject, 
-           (a.due_date < ?) AS is_overdue
+    SELECT COUNT(*) 
+    FROM exams e
+    JOIN subjects s ON e.subject_id = s.id
+    JOIN student_subjects ss ON ss.subject_id = s.id
+    WHERE ss.student_id = ? 
+      AND e.end_time >= ?  -- Exam not closed yet
+");
+$stmt->execute([$userId, $now]);
+$active_or_upcoming_exams = $stmt->fetchColumn();
+
+$missing_submissions = $missing_assignments + $active_or_upcoming_exams;
+
+// UPCOMING DEADLINES (Next 6): Assignments (due soon) + Exams (starting soon)
+$stmt = $pdo->prepare("
+    -- Pending Assignments
+    SELECT a.title, a.due_date AS deadline, s.name AS subject, 
+           'assignment' AS type, 'Due' AS label
     FROM assignments a
     JOIN subjects s ON a.subject_id = s.id
     JOIN student_subjects ss ON ss.subject_id = s.id
     LEFT JOIN submissions sub ON sub.assignment_id = a.id AND sub.student_id = ?
     WHERE ss.student_id = ? AND sub.id IS NULL
-    ORDER BY a.due_date ASC
-    LIMIT 5
+      AND a.due_date >= ?
+    UNION ALL
+    -- Upcoming or Active Exams
+    SELECT e.title, e.start_time AS deadline, s.name AS subject,
+           'exam' AS type, 'Starts' AS label
+    FROM exams e
+    JOIN subjects s ON e.subject_id = s.id
+    JOIN student_subjects ss ON ss.subject_id = s.id
+    WHERE ss.student_id = ?
+      AND e.end_time >= ?
+    ORDER BY deadline ASC
+    LIMIT 6
 ");
-$stmt->execute([$now, $userId, $userId]);
+$stmt->execute([$userId, $userId, $now, $userId, $now]);
 $upcoming = $stmt->fetchAll();
 
-// To-Do List: Overdue + Pending
+// TO-DO LIST: Overdue Assignments + Exams Starting Soon + Active Exams
 $stmt = $pdo->prepare("
-    SELECT a.title, a.due_date, s.name AS subject,
-           'overdue' AS type
+    -- Overdue Assignments
+    SELECT a.title, a.due_date AS deadline, s.name AS subject,
+           'overdue' AS type, 'assignment' AS item_type
     FROM assignments a
     JOIN subjects s ON a.subject_id = s.id
     JOIN student_subjects ss ON ss.subject_id = s.id
     LEFT JOIN submissions sub ON sub.assignment_id = a.id AND sub.student_id = ?
     WHERE ss.student_id = ? AND sub.id IS NULL AND a.due_date < ?
+    
     UNION ALL
-    SELECT a.title, a.due_date, s.name AS subject,
-           'due_soon' AS type
-    FROM assignments a
-    JOIN subjects s ON a.subject_id = s.id
+    -- Exams Starting Within 24 Hours
+    SELECT e.title, e.start_time AS deadline, s.name AS subject,
+           'due_soon' AS type, 'exam' AS item_type
+    FROM exams e
+    JOIN subjects s ON e.subject_id = s.id
     JOIN student_subjects ss ON ss.subject_id = s.id
-    LEFT JOIN submissions sub ON sub.assignment_id = a.id AND sub.student_id = ?
-    WHERE ss.student_id = ? AND sub.id IS NULL 
-      AND a.due_date >= ? AND a.due_date <= DATE_ADD(?, INTERVAL 3 DAY)
-    ORDER BY due_date ASC
+    WHERE ss.student_id = ?
+      AND e.start_time >= ? 
+      AND e.start_time <= DATE_ADD(?, INTERVAL 24 HOUR)
+      AND e.end_time >= ?
+
+    UNION ALL
+    -- Currently Active Exams
+    SELECT e.title, e.end_time AS deadline, s.name AS subject,
+           'active' AS type, 'exam' AS item_type
+    FROM exams e
+    JOIN subjects s ON e.subject_id = s.id
+    JOIN student_subjects ss ON ss.subject_id = s.id
+    WHERE ss.student_id = ?
+      AND ? BETWEEN e.start_time AND e.end_time
+
+    ORDER BY CASE WHEN type = 'overdue' THEN 1 ELSE 2 END DESC, deadline ASC
     LIMIT 8
 ");
-$stmt->execute([$userId, $userId, $now, $userId, $userId, $now, $now]);
+$stmt->execute([
+    $userId, $userId, $now,
+    $userId, $now, $now, $now,
+    $userId, $now
+]);
 $todo_list = $stmt->fetchAll();
-
 ?>
 <?php include 'includes/header.php'; ?>
 
 <div class="dashboard-container">
     <header class="dashboard-header">
-        <h1>Welcome back, <?= htmlspecialchars($_SESSION['name']) ?>!</h1>
+        <h1>Welcome back, <?= htmlspecialchars($_SESSION['name'] ?? 'Student') ?>!</h1>
         <p>Your learning overview at a glance</p>
         <span class="date"><?= date('l, F j, Y') ?></span>
     </header>
 
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-icon assignments">🔖</div>
+            <div class="stat-icon assignments">📝</div>
             <div class="stat-value"><?= $total_assignments ?></div>
             <div class="stat-label">Total Assignments</div>
         </div>
@@ -114,41 +156,49 @@ $todo_list = $stmt->fetchAll();
             <h2>Upcoming Deadlines</h2>
             <?php if ($upcoming): ?>
                 <ul class="deadline-list">
-                    <?php foreach ($upcoming as $item): ?>
-                        <li class="<?= $item['is_overdue'] ? 'overdue' : '' ?>">
+                    <?php foreach ($upcoming as $item): 
+                        $deadlineDt = new DateTime($item['deadline']);
+                        $nowDt = new DateTime();
+                        $isOverdue = $deadlineDt < $nowDt;
+                        $icon = $item['type'] === 'exam' ? '📚 Exam' : '📝 Assignment';
+                    ?>
+                        <li class="<?= $isOverdue ? 'overdue' : '' ?>">
                             <div class="deadline-info">
                                 <strong><?= htmlspecialchars($item['title']) ?></strong>
-                                <span class="subject"><?= htmlspecialchars($item['subject']) ?></span>
+                                <span class="subject"><?= htmlspecialchars($item['subject']) ?> • <?= $icon ?></span>
                             </div>
-                            <div class="deadline-date <?= $item['is_overdue'] ? 'text-danger' : '' ?>">
-                                <?= $item['is_overdue'] ? 'Overdue' : date('M j, g:i A', strtotime($item['due_date'])) ?>
+                            <div class="deadline-date <?= $isOverdue ? 'text-danger' : '' ?>">
+                                <?= $item['label'] ?> <?= $deadlineDt->format('M j, g:i A') ?>
+                                <?php if ($isOverdue): ?> (Overdue)<?php endif; ?>
                             </div>
                         </li>
                     <?php endforeach; ?>
                 </ul>
             <?php else: ?>
-                <p class="empty">No pending deadlines</p>
+                <p class="empty">No upcoming deadlines</p>
             <?php endif; ?>
             <a href="assignments.php" class="view-all">View All Assignments</a>
+            <a href="exams.php" class="view-all" style="margin-top:0.5rem;display:block;">View All Exams</a>
         </section>
 
         <section class="card todo-card">
             <h2>To-Do List</h2>
             <?php if ($todo_list): ?>
                 <ul class="todo-list">
-                    <?php foreach ($todo_list as $task): ?>
+                    <?php foreach ($todo_list as $task): 
+                        $badgeClass = $task['type'] === 'overdue' ? 'danger' : ($task['type'] === 'active' ? 'success' : 'warning');
+                        $label = $task['type'] === 'overdue' ? 'Overdue' : ($task['type'] === 'active' ? 'Active Now' : 'Due Soon');
+                        $icon = $task['item_type'] === 'exam' ? '📚 Exam' : '📝 Assignment';
+                        $taskDt = new DateTime($task['deadline']);
+                    ?>
                         <li class="todo-item <?= $task['type'] ?>">
-                            <div class="todo-check">✅</div>
+                            <div class="todo-check"><?= $task['type'] === 'active' ? '⏰' : '⚠️' ?></div>
                             <div class="todo-content">
                                 <strong><?= htmlspecialchars($task['title']) ?></strong>
-                                <span class="subject"><?= htmlspecialchars($task['subject']) ?></span>
+                                <span class="subject"><?= htmlspecialchars($task['subject']) ?> • <?= $icon ?></span>
                             </div>
                             <div class="todo-due">
-                                <?php if ($task['type'] === 'overdue'): ?>
-                                    <span class="badge danger">Overdue</span>
-                                <?php else: ?>
-                                    <span class="badge warning">Due Soon</span>
-                                <?php endif; ?>
+                                <span class="badge <?= $badgeClass ?>"><?= $label ?> • <?= $taskDt->format('M j, g:i A') ?></span>
                             </div>
                         </li>
                     <?php endforeach; ?>
@@ -157,6 +207,7 @@ $todo_list = $stmt->fetchAll();
                 <p class="empty">Nothing to do — great job!</p>
             <?php endif; ?>
             <a href="assignments.php" class="view-all">Go to Assignments</a>
+            <a href="exams.php" class="view-all" style="margin-top:0.5rem;display:block;">Go to Exams</a>
         </section>
     </div>
 </div>
@@ -169,7 +220,7 @@ $todo_list = $stmt->fetchAll();
         --card: #ffffff;
         --text: #0f172a;
         --text-muted: #64748b;
-        --accent: #2563eb;
+        --accent: #7c3aed;
         --success: #10b981;
         --warning: #f59e0b;
         --danger: #ef4444;
@@ -193,7 +244,6 @@ $todo_list = $stmt->fetchAll();
         padding: 2rem; 
     }
 
-    /* HEADER */
     .dashboard-header {
         margin-bottom: 2rem;
         text-align: center;
@@ -212,7 +262,6 @@ $todo_list = $stmt->fetchAll();
         font-size: 0.95rem; 
     }
 
-    /* STAT CARDS */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -231,6 +280,7 @@ $todo_list = $stmt->fetchAll();
     .stat-card:hover { 
         transform: translateY(-4px); 
     }
+    .stat-card.warning .stat-value { color: var(--warning); }
     .stat-icon {
         font-size: 2rem; 
         margin-bottom: 1rem;
@@ -245,7 +295,6 @@ $todo_list = $stmt->fetchAll();
         font-size: 0.95rem; 
     }
 
-    /* CONTENT GRID */
     .dashboard-content {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -255,7 +304,6 @@ $todo_list = $stmt->fetchAll();
         .dashboard-content { grid-template-columns: 1fr; } 
     }
 
-    /* CARD BASE */
     .card {
         background: var(--card);
         border-radius: var(--radius);
@@ -267,54 +315,44 @@ $todo_list = $stmt->fetchAll();
         font-size: 1.2rem;
         font-weight: 600;
         margin: 0 0 1rem;
+        color: var(--accent);
     }
 
-    /* DEADLINES */
-    .deadline-list { 
+    .deadline-list, .todo-list { 
         list-style: none; 
         margin: 0; padding: 0; 
     }
-    .deadline-list li {
+    .deadline-list li, .todo-item {
         display: flex;
         justify-content: space-between;
-        padding: 0.75rem 0;
+        align-items: flex-start;
+        padding: 0.85rem 0;
         border-bottom: 1px solid var(--border);
+        gap: 1rem;
     }
-    .deadline-list li:last-child { border-bottom: none; }
-    .deadline-list li.overdue { color: var(--danger); }
-    .deadline-info strong { display: block; font-size: 0.95rem; }
-    .deadline-info .subject { font-size: 0.8rem; color: var(--text-muted); }
-    .deadline-date { font-weight: 600; font-size: 0.9rem; }
+    .deadline-list li:last-child, .todo-item:last-child { border-bottom: none; }
+    .deadline-list li.overdue { color: var(--danger); font-weight: 600; }
+    .deadline-info strong, .todo-content strong { display: block; font-size: 0.98rem; }
+    .deadline-info .subject, .todo-content .subject { 
+        font-size: 0.82rem; 
+        color: var(--text-muted); 
+        margin-top: 0.2rem;
+    }
+    .deadline-date, .todo-due { font-weight: 600; font-size: 0.9rem; text-align: right; flex-shrink: 0; }
 
-    /* TO-DO LIST */
-    .todo-list { 
-        list-style: none; 
-        margin: 0; padding: 0; 
-    }
-    .todo-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--border);
-    }
-    .todo-item:last-child { border-bottom: none; }
-    .todo-check {
-        flex-shrink: 0;
-        font-size: 1.5rem;
-    }
-    .todo-content strong { display: block; font-size: 0.95rem; }
-    .todo-content .subject { font-size: 0.8rem; color: var(--text-muted); }
+    .todo-check { font-size: 1.6rem; margin-right: 0.75rem; flex-shrink: 0; }
+    .todo-content { flex: 1; }
     .badge {
-        font-size: 0.7rem;
-        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
         border-radius: 1rem;
         font-weight: 600;
+        text-transform: uppercase;
     }
     .badge.danger { background: #fee2e2; color: var(--danger); }
-    .badge.warning { background: #fef3c7; color: #d97706; }
+    .badge.warning { background: #fffbeb; color: #92400e; }
+    .badge.success { background: #d1fae5; color: #065f46; }
 
-    /* LINKS */
     .view-all {
         display: block;
         margin-top: 1rem;
@@ -326,20 +364,19 @@ $todo_list = $stmt->fetchAll();
     }
     .view-all:hover { text-decoration: underline; }
 
-    /* EMPTY STATE */
     .empty {
         color: var(--text-muted);
         font-style: italic;
         text-align: center;
-        padding: 1.5rem;
+        padding: 2rem;
         margin: 0;
     }
 
-    /* RESPONSIVE */
     @media (max-width: 768px) {
         .dashboard-container { padding: 1rem; }
         .stats-grid { grid-template-columns: 1fr; }
-        .dashboard-header { text-align: center; }
+        .deadline-list li, .todo-item { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .deadline-date, .todo-due { text-align: left; }
     }
 </style>
 

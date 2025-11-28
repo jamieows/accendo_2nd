@@ -25,24 +25,6 @@ $pageTitle = "Settings";
                 <span class="slider"></span>
             </label>
         </div>
-
-        <hr>
-
-        <div class="setting-item">
-            <div class="setting-label">
-                <span>Text Size</span>
-                <small>Adjust readability</small>
-            </div>
-            <div class="zoom-controls">
-                <button id="zoomOut" class="zoom-btn">A-</button>
-                <span id="zoomLevel">100%</span>
-                <button id="zoomIn" class="zoom-btn">A+</button>
-            </div>
-        </div>
-
-        <div class="reset-zoom">
-            <button id="resetZoom" class="btn btn-secondary">Reset to Default</button>
-        </div>
     </div>
 </div>
 
@@ -61,35 +43,16 @@ $pageTitle = "Settings";
     .slider:before { content: ""; position: absolute; width: 22px; height: 22px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .3s; }
     input:checked + .slider { background: var(--accent); }
     input:checked + .slider:before { transform: translateX(24px); }
-
-    .zoom-controls { display: flex; align-items: center; gap: 12px; }
-    .zoom-btn { background: #374151; color: #e5e7eb; border: none; width: 36px; height: 36px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .zoom-btn:hover { background: #4b5563; transform: scale(1.05); }
-    #zoomLevel { min-width: 50px; text-align: center; font-family: monospace; }
-
-    .btn-secondary { background: #374151; color: #e5e7eb; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; }
-    .btn-secondary:hover { background: #4b5563; }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const darkToggle = document.getElementById('darkModeToggle');
-    const zoomIn = document.getElementById('zoomIn');
-    const zoomOut = document.getElementById('zoomOut');
-    const reset = document.getElementById('resetZoom');
-    const level = document.getElementById('zoomLevel');
 
     // Initialize Dark Mode
     darkToggle.checked = localStorage.getItem('accendo_theme') === 'dark';
 
-    // Initialize Zoom Display
-    const updateLevel = () => {
-        const z = parseFloat(localStorage.getItem('accendo_zoom') || '1');
-        level.textContent = Math.round(z * 100) + '%';
-    };
-    updateLevel();
-
-    // Bind Events
+    // Dark Mode Toggle
     darkToggle.addEventListener('change', () => {
         const isDark = darkToggle.checked;
         document.body.classList.toggle('dark-mode', isDark);
@@ -101,10 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ theme: isDark ? 'dark' : 'light' })
         }).catch(() => {});
     });
-
-    zoomIn.addEventListener('click', () => { window.zoomIn(); updateLevel(); });
-    zoomOut.addEventListener('click', () => { window.zoomOut(); updateLevel(); });
-    reset.addEventListener('click', () => { window.zoomReset(); updateLevel(); });
 });
 </script>
 

@@ -40,7 +40,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
         <div class="assignments-grid" id="assignmentsList">
             <?php
             $stmt = $pdo->prepare("
-                SELECT a.id, a.title, a.description, a.due_date, a.file_required, 
+                SELECT a.id, a.title, a.description, a.due_date, 
                        s.name AS subject,
                        sub.id AS submission_id, sub.file_path AS submitted_file, 
                        sub.grade, sub.submitted_at
@@ -69,7 +69,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 
                 $filterStatus = $status === 'graded' ? 'submitted' : $status;
 
-                // Status badges with text + color
                 $statusConfig = [
                     'pending'   => ['text' => 'Pending',   'color' => '#f59e0b'],
                     'submitted' => ['text' => 'Submitted', 'color' => '#3b82f6'],
@@ -79,6 +78,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 
                 $badge = $statusConfig[$status];
                 $dueStr = $dueDate->format('M j, Y');
+
+                // Fixed: Relative web path from /student/ to /uploads/
+                $fileUrl = $a['submitted_file'] ? '../' . htmlspecialchars($a['submitted_file']) : '';
 
                 echo "
                 <article class='assignment-card' data-status='$filterStatus' data-title='" . htmlspecialchars($a['title']) . "' data-subject='" . htmlspecialchars($a['subject']) . "'>
@@ -105,7 +107,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
                                 <small>Submitted " . (new DateTime($a['submitted_at']))->format('M j') . "</small>
                                 " . ($a['grade'] !== null ? "<strong class='grade'>{$a['grade']}/100</strong>" : "") . "
                             </div>
-                            <button class='btn-view' onclick='openFileModal(\"{$a['submitted_file']}\")'>View</button>
+                            <button class='btn-view' onclick='openFileModal(\"$fileUrl\")'>View</button>
                         " : ($isOverdue ? 
                             "<span class='overdue'>Past Due</span>" : 
                             "<button class='btn-submit' onclick='openSubmitModal({$a['id']})'>Submit</button>"
@@ -122,11 +124,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 <dialog id="submitModal" class="modal">
     <div class="modal-content">
         <header><h2>Submit Assignment</h2><button onclick="closeSubmitModal()" class="close">×</button></header>
-        <form id="submitForm" enctype="multipart/form-data" method="POST" action="api/submit_assignment.php">
+        <form id="submitForm" enctype="multipart/form-data">
             <input type="hidden" name="assignment_id" id="assignmentId">
             <div class="form-group">
                 <label>Upload File <span class="req">*</span></label>
-                <input type="file" name="file" required accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                <input type="file" name="file" required accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.mp4,.webm,.ogg">
             </div>
             <div class="actions">
                 <button type="submit" class="btn-primary">Submit</button>
@@ -139,8 +141,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 <!-- File Viewer Modal -->
 <dialog id="fileModal" class="modal modal-large">
     <div class="modal-content">
-        <header><h2>Submitted File</h2><button onclick="closeFileModal()" class="close">×</button></header>
-        <div id="fileViewer" class="viewer"></div>
+        <header>
+            <h2>View Submitted File</h2>
+            <button onclick="closeFileModal()" class="close">×</button>
+        </header>
+        <div id="fileViewer" class="viewer">
+            <p style="text-align:center; padding:3rem; color:#94a3b8;">Loading file...</p>
+        </div>
     </div>
 </dialog>
 
@@ -158,7 +165,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); line-height:1.5; }
 
     .container { max-width: 1240px; margin: 0 auto; padding: 1.5rem 1rem; }
-
     .page-header { text-align: center; margin-bottom: 2rem; }
     .page-title { font-size: 2.2rem; font-weight: 700; }
     .page-desc { font-size: 1rem; color: var(--muted); }
@@ -172,10 +178,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     .search-wrapper input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
     .search-icon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--muted); }
 
-    .status-filter {
-        padding: 0.75rem 1.2rem; border: 1px solid var(--border); border-radius: 12px;
-        background: var(--card); font-size: 0.95rem;
-    }
+    .status-filter { padding: 0.75rem 1.2rem; border: 1px solid var(--border); border-radius: 12px; background: var(--card); font-size: 0.95rem; }
 
     .assignments-grid { display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 
@@ -215,13 +218,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     .empty-state { grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--muted); }
     .empty-icon { font-size: 3.5rem; margin-bottom: 0.5rem; }
 
-    dialog { border: 0; border-radius: var(--radius); max-width: 480px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
-    dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); }
-    .modal-large { max-width: 860px; }
-    .modal-content { background: var(--card); border-radius: var(--radius); }
+    dialog { border: 0; border-radius: var(--radius); max-width: 1000px; width: 95%; max-height: 90vh; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+    dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
+    .modal-large { max-width: 1000px; }
+    .modal-content { background: var(--card); border-radius: var(--radius); overflow: hidden; }
     header { padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    header h2 { font-size: 1.35rem; font-weight: 600; }
-    .close { background:none; border:none; font-size:2rem; cursor:pointer; color:var(--muted); }
+    header h2 { font-size: 1.4rem; font-weight: 600; }
+    .close { background:none; border:none; font-size:2.2rem; cursor:pointer; color:var(--muted); opacity: 0.7; }
+    .close:hover { opacity: 1; }
+
+    .viewer { height: 75vh; background: #000; position: relative; overflow: auto; }
+    .viewer iframe, .viewer img, .viewer video { width: 100%; height: 100%; border: none; object-fit: contain; }
 
     .form-group { padding: 1.5rem; }
     .form-group label { font-weight: 600; margin-bottom: 0.5rem; display: block; }
@@ -232,12 +239,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
     .btn-primary { background: var(--primary); color: white; padding: 0.7rem 1.5rem; border: none; border-radius: 10px; font-weight: 600; }
     .btn-cancel { background: transparent; color: var(--muted); border: 1px solid var(--border); padding: 0.7rem 1.3rem; border-radius: 10px; }
 
-    .viewer { height: 70vh; background: #000; }
-    .viewer iframe, .viewer img, .viewer video { width:100%; height:100%; border:none; }
-
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
         .filters-bar { flex-direction: column; align-items: stretch; }
         .assignments-grid { grid-template-columns: 1fr; }
+        .viewer { height: 60vh; }
     }
 </style>
 
@@ -247,52 +252,106 @@ document.addEventListener('DOMContentLoaded', () => {
     const filter = document.getElementById('filterStatus');
     const cards = document.querySelectorAll('.assignment-card');
 
-    const update = () => {
+    const updateFilter = () => {
         const q = search.value.toLowerCase().trim();
         const s = filter.value;
-        cards.forEach(c => {
-            const matchQ = c.dataset.title.toLowerCase().includes(q) || c.dataset.subject.toLowerCase().includes(q);
-            const matchS = !s || c.dataset.status === s;
-            c.style.display = matchQ && matchS ? '' : 'none';
+        cards.forEach(card => {
+            const matchSearch = card.dataset.title.toLowerCase().includes(q) || card.dataset.subject.toLowerCase().includes(q);
+            const matchStatus = !s || card.dataset.status === s;
+            card.style.display = matchSearch && matchStatus ? '' : 'none';
         });
     };
-    search.addEventListener('input', update);
-    filter.addEventListener('change', update);
 
-    window.openSubmitModal = id => { 
-        document.getElementById('assignmentId').value = id; 
-        document.getElementById('submitModal').showModal(); 
-    };
-    window.closeSubmitModal = () => { 
-        document.getElementById('submitModal').close(); 
-        document.getElementById('submitForm').reset(); 
+    search.addEventListener('input', updateFilter);
+    filter.addEventListener('change', updateFilter);
+
+    window.openSubmitModal = id => {
+        document.getElementById('assignmentId').value = id;
+        document.getElementById('submitModal').showModal();
     };
 
-    window.openFileModal = path => {
-        const ext = path.split('.').pop().toLowerCase();
-        let html = '';
-        if (ext === 'pdf') html = `<iframe src="${path}"></iframe>`;
-        else if (['png','jpg','jpeg','gif'].includes(ext)) html = `<img src="${path}">`;
-        else if (['mp4','webm'].includes(ext)) html = `<video src="${path}" controls></video>`;
-        else if (['doc','docx'].includes(ext)) html = `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(path)}"></iframe>`;
-        else html = `<p style="color:#e2e8f0;text-align:center;padding:3rem;"><a href="${path}" target="_blank" style="color:#60a5fa;">Download File</a></p>`;
-        document.getElementById('fileViewer').innerHTML = html;
+    window.closeSubmitModal = () => {
+        document.getElementById('submitModal').close();
+        document.getElementById('submitForm').reset();
+    };
+
+    // Fixed: Robust file viewer with Google Docs fallback (handles DOCX better, no CORS issues)
+    window.openFileModal = async (relativePath) => {
+        if (!relativePath) {
+            alert("No file found.");
+            return;
+        }
+
+        // Test if direct access works (for images/PDF/video)
+        const testUrl = relativePath;
+        let directLoad = false;
+        try {
+            const response = await fetch(testUrl, { method: 'HEAD' });
+            directLoad = response.ok;
+            console.log('Direct file access:', testUrl, 'Status:', response.status); // Debug
+        } catch (e) {
+            console.error('Direct access failed:', e); // Debug
+        }
+
+        const ext = relativePath.split('.').pop().toLowerCase();
+        let content = '<p style="text-align:center; padding:3rem; color:#94a3b8;">Loading preview...</p>';
+
+        if (directLoad && (ext === 'pdf' || ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext))) {
+            // Direct embed for PDF/images (fastest)
+            if (ext === 'pdf') {
+                content = `<iframe src="${testUrl}" frameborder="0" style="width:100%; height:100%;"></iframe>`;
+            } else {
+                content = `<img src="${testUrl}" alt="Submitted file" style="max-width:100%; height:auto;">`;
+            }
+        } else if (['doc', 'docx', 'pdf'].includes(ext) || !directLoad) {
+            // Google Docs Viewer for DOCX/PDF (reliable embed, handles all)
+            const absoluteUrl = new URL(testUrl, window.location.origin).href;
+            const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(absoluteUrl)}&embedded=true`;
+            content = `<iframe src="${viewerUrl}" frameborder="0" style="width:100%; height:100%;"></iframe>`;
+            console.log('Using Google Viewer for:', absoluteUrl); // Debug
+        } else if (['mp4', 'webm', 'ogg'].includes(ext)) {
+            content = `<video src="${testUrl}" controls style="width:100%; height:100%;"></video>`;
+        } else {
+            // Fallback: Download link
+            content = `
+                <div style="padding:4rem; text-align:center; color:#94a3b8;">
+                    <p>Preview not supported for this type (${ext.toUpperCase()}).</p>
+                    <a href="${testUrl}" download style="color:#60a5fa; font-size:1.2rem; text-decoration:underline;">Download File</a>
+                </div>`;
+        }
+
+        document.getElementById('fileViewer').innerHTML = content;
         document.getElementById('fileModal').showModal();
     };
-    window.closeFileModal = () => { 
-        document.getElementById('fileModal').close(); 
-        document.getElementById('fileViewer').innerHTML = ''; 
+
+    window.closeFileModal = () => {
+        document.getElementById('fileModal').close();
+        document.getElementById('fileViewer').innerHTML = '<p style="text-align:center;padding:3rem;color:#94a3b8;">Loading file...</p>';
     };
 
-    document.getElementById('submitForm').onsubmit = async e => {
+    // Submit handler (unchanged, but added debug)
+    document.getElementById('submitForm').onsubmit = async (e) => {
         e.preventDefault();
-        const res = await fetch('api/submit_assignment.php', { method: 'POST', body: new FormData(e.target) });
+        const formData = new FormData(e.target);
+        const res = await fetch('api/submit_assignment.php', {
+            method: 'POST',
+            body: formData
+        });
         const data = await res.json();
-        if (data.success) location.reload();
-        else alert(data.message || 'Submission failed');
+        console.log('Submit response:', data); // Debug
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Upload failed');
+        }
     };
 
-    document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => e.target === d && d.close()));
+    // Close on backdrop click
+    document.querySelectorAll('dialog').forEach(dlg => {
+        dlg.addEventListener('click', e => {
+            if (e.target === dlg) dlg.close();
+        });
+    });
 });
 </script>
 
