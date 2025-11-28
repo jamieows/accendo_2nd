@@ -43,11 +43,12 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
                 SELECT a.id, a.title, a.description, a.due_date, 
                        s.name AS subject,
                        sub.id AS submission_id, sub.file_path AS submitted_file, 
-                       sub.grade, sub.submitted_at
+                       sub.submitted_at,
+                       a.file_path AS assignment_file
                 FROM assignments a
                 JOIN subjects s ON a.subject_id = s.id
                 JOIN student_subjects ss ON ss.subject_id = s.id
-                LEFT JOIN submissions sub ON sub.assignment_id = a.id AND sub.student_id = ?
+                LEFT JOIN assignment_submissions sub ON sub.assignment_id = a.id AND sub.student_id = ?
                 WHERE ss.student_id = ?
                 ORDER BY a.due_date ASC
             ");
@@ -64,15 +65,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
                 $isOverdue = $dueDate < $now && !$a['submission_id'];
 
                 $status = $a['submission_id']
-                    ? ($a['grade'] !== null ? 'graded' : 'submitted')
+                    ? 'submitted'
                     : ($isOverdue ? 'overdue' : 'pending');
 
-                $filterStatus = $status === 'graded' ? 'submitted' : $status;
+                $filterStatus = $status;
 
                 $statusConfig = [
                     'pending'   => ['text' => 'Pending',   'color' => '#f59e0b'],
                     'submitted' => ['text' => 'Submitted', 'color' => '#3b82f6'],
-                    'graded'    => ['text' => 'Graded',    'color' => '#10b981'],
                     'overdue'   => ['text' => 'Overdue',   'color' => '#ef4444'],
                 ];
 
@@ -80,7 +80,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
                 $dueStr = $dueDate->format('M j, Y');
 
                 // Fixed: Relative web path from /student/ to /uploads/
-                $fileUrl = $a['submitted_file'] ? '../' . htmlspecialchars($a['submitted_file']) : '';
+                $fileUrl = $a['submitted_file'] ? '/accendo_2nd/' . htmlspecialchars($a['submitted_file']) : '';
+                $assignUrl = $a['assignment_file'] ? '/accendo_2nd/' . htmlspecialchars($a['assignment_file']) : '';
 
                 echo "
                 <article class='assignment-card' data-status='$filterStatus' data-title='" . htmlspecialchars($a['title']) . "' data-subject='" . htmlspecialchars($a['subject']) . "'>
@@ -102,12 +103,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
                     </div>
 
                     <div class='card-footer'>
+                        <div class='actions-left'>
+                            " . ($a['assignment_file'] ? "<button class='btn-view' onclick='openFileModal(\"$assignUrl\")'>View Assignment</button>" : "") . "
+                        </div>
                         " . ($a['submission_id'] ? "
                             <div class='meta'>
                                 <small>Submitted " . (new DateTime($a['submitted_at']))->format('M j') . "</small>
-                                " . ($a['grade'] !== null ? "<strong class='grade'>{$a['grade']}/100</strong>" : "") . "
                             </div>
-                            <button class='btn-view' onclick='openFileModal(\"$fileUrl\")'>View</button>
+                            <button class='btn-view' onclick='openFileModal(\"$fileUrl\")'>View Submission</button>
                         " : ($isOverdue ? 
                             "<span class='overdue'>Past Due</span>" : 
                             "<button class='btn-submit' onclick='openSubmitModal({$a['id']})'>Submit</button>"
@@ -142,7 +145,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'student') {
 <dialog id="fileModal" class="modal modal-large">
     <div class="modal-content">
         <header>
-            <h2>View Submitted File</h2>
+            <h2>View File</h2>
             <button onclick="closeFileModal()" class="close">×</button>
         </header>
         <div id="fileViewer" class="viewer">
