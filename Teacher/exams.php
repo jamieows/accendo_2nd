@@ -171,7 +171,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     </div>
 </div>
 
-<!-- ==================== FIXED & ENHANCED CSS (ONLY ADDED/FIXED LINES) ==================== -->
 <style>
     :root {
         --primary: #7B61FF;
@@ -187,7 +186,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
         --shadow: 0 10px 25px rgba(123,97,255,0.1);
     }
 
-    /* Dark Mode - This is what makes it look like your screenshot */
     .dark-mode {
         --bg: #0f172a;
         --card: #1e293b;
@@ -201,7 +199,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
         color: var(--text); 
         font-family: 'Inter', sans-serif; 
         margin: 0;
-        transition: background 0.3s;
+        transition: background 0.3s, color 0.3s;
     }
 
     .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
@@ -217,7 +215,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     }
     .page-subtitle { color: var(--text-light); font-size: 1.1rem; margin-top: 0.5rem; }
 
-    /* Cards */
     .upload-card, .table-card {
         background: var(--card);
         border-radius: var(--radius);
@@ -318,7 +315,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
         flex: 1;
     }
 
-    /* ==================== FIXED: This line was broken in your code ==================== */
     .table-header {
         display: flex;
         justify-content: space-between;
@@ -412,7 +408,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
         font-weight: 500;
     }
 
-    /* Toast & Loading */
     #toast {
         position: fixed;
         bottom: 2rem;
@@ -449,7 +444,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Mobile Responsive */
     @media (max-width: 768px) {
         .form-grid { grid-template-columns: 1fr; }
         .form-actions { flex-direction: column; }
@@ -480,7 +474,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     }
 </style>
 
-<!-- Your original script (100% untouched) -->
 <script>
     function showToast(msg, error = false) {
         const toast = document.getElementById('toast');
@@ -517,9 +510,31 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
             });
     }
 
-    // URL messages
     if (location.search.includes('uploaded=1')) showToast('Exam uploaded successfully!');
     if (location.search.includes('deleted=1')) showToast('Exam deleted successfully!');
+</script>
+
+<!-- THEME SYNC FIX - Now works perfectly with your Settings page -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const applyTheme = () => {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'light') {
+                document.body.classList.remove('dark-mode');
+            } else {
+                document.body.classList.add('dark-mode');
+            }
+        };
+
+        applyTheme();
+
+        // Listen for theme changes from Settings page (even in another tab)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                applyTheme();
+            }
+        });
+    });
 </script>
 
 <?php include 'includes/footer.php'; ?>

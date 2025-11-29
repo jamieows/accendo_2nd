@@ -7,9 +7,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'teacher') {
     exit();
 }
 
-/* --------------------------------------------------------------
-   AUTO-CREATE `uploaded_at` COLUMN IF NOT EXISTS
-   -------------------------------------------------------------- */
+/* AUTO-CREATE uploaded_at COLUMN IF NOT EXISTS */
 try {
     $pdo->query("SELECT uploaded_at FROM materials LIMIT 1");
 } catch (PDOException $e) {
@@ -22,221 +20,342 @@ try {
 <?php include 'includes/header.php'; ?>
 
 <style>
-  /* spacing between label and control, and more readable label word spacing */
-  form.card label {
-    display:block;
-    margin:12px 0 8px;
-    font-weight:600;
-    word-spacing:0.28rem;
-    letter-spacing:0.15px;
-  }
+    :root {
+        --primary: #7B61FF;
+        --primary-light: #A78BFA;
+        --danger: #EF4444;
+        --success: #10B981;
+        --text: #1f2937;
+        --text-light: #6b7280;
+        --bg: #ffffff;
+        --card: #ffffff;
+        --border: rgba(0,0,0,0.1);
+        --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
 
-  form.card select,
-  form.card input[type="text"],
-  form.card textarea,
-  form.card input[type="datetime-local"],
-  form.card input[type="file"]{
-    display:block;
-    width:100%;
-    padding:8px;
-    margin-bottom:16px;
-    border-radius:6px;
-    border:1px solid rgba(0,0,0,0.08);
-    box-sizing:border-box;
-    background:#fff;
-  }
+    .dark-mode {
+        --text: #f3f4f6;
+        --text-light: #94a3b8;
+        --bg: #0f172a;
+        --card: #1e293b;
+        --border: #334155;
+        --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
 
-  /* ==== TEXT VISIBILITY FIX (light/dark mode) ==== */
-  form.card select,
-  form.card input,
-  form.card textarea,
-  form.card option {
-      color: #1f2937;
-  }
-  .dark-mode form.card select,
-  .dark-mode form.card input,
-  .dark-mode form.card textarea,
-  .dark-mode form.card option {
-      color: #f3f4f6 !important;
-      background: #1e293b !important;
-  }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Inter', sans-serif;
+        transition: background 0.3s, color 0.3s;
+        margin: 0;
+    }
 
-  table th, table td{ padding:10px 12px; text-align:left; vertical-align:middle; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
 
-  /* ────────────────────── BUTTONS ────────────────────── */
-  .btn-sm {
-    display: inline-block;
-    padding: 6px 12px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-align: center;
-    border-radius: 6px;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 0 2px;
-    min-width: 44px;
-  }
+    /* Headings - Beautiful gradient in both modes */
+    h1, h2 {
+        margin: 0 0 1.5rem 0;
+        font-weight: 700;
+    }
 
-  .btn-view {
-    background: #7B61FF;
-    color: white;
-  }
-  .btn-view:hover {
-    background: #6a51e6;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(123,97,255,0.3);
-  }
+    h1 {
+        font-size: 2.8rem;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-  .btn-danger {
-    background: #EF4444;
-    color: white;
-  }
-  .btn-danger:hover {
-    background: #dc2626;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(239,68,68,0.3);
-  }
+    h2 {
+        font-size: 1.9rem;
+        color: var(--text);
+        margin-top: 2.5rem;
+    }
 
-  .dark-mode .btn-view,
-  .dark-mode .btn-danger {
-    background: #7B61FF;
-  }
-  .dark-mode .btn-view:hover { background: #6a51e6; }
-  .dark-mode .btn-danger { background: `EF4444; }
-  .dark-mode .btn-danger:hover { background: #dc2626; }
+    /* Cards */
+    .card {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 28px;
+        margin: 24px 0;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+    }
 
-  /* ———————————————————————
-     FIXED: Headings perfectly visible in BOTH Light & Dark Mode
-     ——————————————————————— */
-  h1, h2 {
-    margin: 0 0 1.5rem 0;
-    font-weight: 700;
-    color: #1f2937; /* Dark gray in light mode */
-  }
+    /* Form Styling */
+    form.card label {
+        display: block;
+        margin: 16px 0 8px;
+        font-weight: 600;
+        color: var(--text);
+        font-size: 0.95rem;
+    }
 
-  h1 {
-    font-size: 2.6rem;
-    background: linear-gradient(135deg, #7B61FF, #A78BFA);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+    form.card select,
+    form.card input[type="text"],
+    form.card textarea,
+    form.card input[type="file"] {
+        width: 100%;
+        padding: 12px 14px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+        color: var(--text);
+        font-size: 1rem;
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+        margin-bottom: 16px;
+    }
 
-  h2 {
-    font-size: 1.8rem;
-    color: #374151;
-  }
+    form.card input:focus,
+    form.card select:focus,
+    form.card textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(123,97,255,0.15);
+    }
 
-  /* Dark Mode: Bright & beautiful headings */
-  .dark-mode h1,
-  .dark-mode h2 {
-    color: #f1f5f9 !important;
-  }
+    form.card textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
 
-  .dark-mode h1 {
-    background: linear-gradient(135deg, #C4B5FD, #E0D4FF);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+    /* Buttons */
+    .btn, .btn-sm {
+        display: inline-block;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
 
-  .dark-mode h2 {
-    color: #e2e8f0;
-  }
+    .btn {
+        padding: 14px 32px;
+        font-size: 1.05rem;
+    }
+
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 0.875rem;
+    }
+
+    .btn-view, .btn-sm.btn-view {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-view:hover, .btn-sm.btn-view:hover {
+        background: #6a51e6;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(123,97,255,0.3);
+    }
+
+    .btn-danger, .btn-sm.btn-danger {
+        background: var(--danger);
+        color: white;
+    }
+
+    .btn-danger:hover, .btn-sm.btn-danger:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239,68,68,0.3);
+    }
+
+    /* Table */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+        background: var(--card);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    table th {
+        background: rgba(123,97,255,0.1);
+        color: var(--text);
+        padding: 16px 14px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    table td {
+        padding: 16px 14px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        vertical-align: middle;
+    }
+
+    table tr:hover {
+        background: rgba(123,97,255,0.08);
+    }
+
+    table tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Alerts */
+    .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin: 20px 0;
+        font-weight: 500;
+        border-left: 5px solid var(--success);
+        box-shadow: 0 4px 12px rgba(16,185,129,0.15);
+    }
+
+    .dark-mode .alert-success {
+        background: rgba(16,185,129,0.2);
+        color: #86efac;
+        border-left-color: var(--success);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .container { padding: 1rem; }
+        h1 { font-size: 2.2rem; }
+        table { font-size: 0.9rem; }
+        table th, table td { padding: 12px 10px; }
+        .btn, .btn-sm { width: 100%; margin: 8px 0; }
+    }
 </style>
 
-<h1>My Courses</h1>
+<div class="container">
 
-<form action="api/upload_material.php" method="POST" class="card" enctype="multipart/form-data">
-  <label>Subject</label>
-  <select name="subject_id" required>
-    <?php
-    $stmt = $pdo->prepare("SELECT s.id, s.name FROM teacher_subjects ts JOIN subjects s ON ts.subject_id = s.id WHERE ts.teacher_id = ?");
-    $stmt->execute([$_SESSION['user_id']]);
-    while($s = $stmt->fetch()) echo "<option value='".htmlspecialchars($s['id'])."'>".htmlspecialchars($s['name'])."</option>";
-    ?>
-  </select>
+    <h1>My Courses</h1>
 
-  <label>Title</label>
-  <input type="text" name="title" required>
+    <form action="api/upload_material.php" method="POST" class="card" enctype="multipart/form-data">
+        <label>Subject *</label>
+        <select name="subject_id" required>
+            <option value="">Select a subject</option>
+            <?php
+            $stmt = $pdo->prepare("SELECT s.id, s.name FROM teacher_subjects ts JOIN subjects s ON ts.subject_id = s.id WHERE ts.teacher_id = ? ORDER BY s.name");
+            $stmt->execute([$_SESSION['user_id']]);
+            while($s = $stmt->fetch()) {
+                echo "<option value='".htmlspecialchars($s['id'])."'>".htmlspecialchars($s['name'])."</option>";
+            }
+            ?>
+        </select>
 
-  <label>Description</label>
-  <textarea name="description" rows="3" placeholder="Optional description..."></textarea>
+        <label>Title *</label>
+        <input type="text" name="title" placeholder="e.g., Chapter 1: Introduction to Biology" required>
 
-  <label>File (DOC, PDF, Video)</label>
-  <input type="file" name="file" 
-         accept=".doc,.docx,.pdf,video/mp4,video/webm,video/ogg" required>
+        <label>Description (Optional)</label>
+        <textarea name="description" rows="4" placeholder="Brief description of the material..."></textarea>
 
-  <button type="submit" class="btn">Upload Material</button>
-</form>
+        <label>File * (PDF, DOC, Video)</label>
+        <input type="file" name="file" 
+               accept=".pdf,.doc,.docx,.ppt,.pptx,video/mp4,video/webm,video/ogg" required>
 
-<h2 style="margin-top:30px;">Uploaded Materials</h2>
+        <button type="submit" class="btn btn-view">Upload Material</button>
+    </form>
 
-<?php if (isset($_GET['deleted'])): ?>
-  <div style="background:#d1fae5; color:#065f46; padding:12px; border-radius:6px; margin-bottom:16px; font-weight:500;">
-    Material deleted successfully.
-  </div>
-<?php endif; ?>
+    <h2>Uploaded Materials</h2>
 
-<?php if (isset($_GET['uploaded'])): ?>
-  <div style="background:#d1fae5; color:#065f46; padding:12px; border-radius:6px; margin-bottom:16px; font-weight:500;">
-    Material uploaded successfully!
-  </div>
-<?php endif; ?>
+    <?php if (isset($_GET['uploaded'])): ?>
+        <div class="alert-success">
+            Material uploaded successfully!
+        </div>
+    <?php endif; ?>
 
-<div class="card">
-  <table>
-    <tr>
-      <th>Title</th>
-      <th>Description</th>
-      <th>Subject</th>
-      <th>File</th>
-      <th>Uploaded</th>
-      <th>Action</th>
-    </tr>
-    <?php
-    $stmt = $pdo->prepare("
-        SELECT m.id, m.title, m.description, s.name AS subject, m.file_path, m.uploaded_at
-        FROM materials m
-        JOIN subjects s ON m.subject_id = s.id
-        WHERE m.teacher_id = ?
-        ORDER BY m.uploaded_at DESC
-    ");
-    $stmt->execute([$_SESSION['user_id']]);
-    while($m = $stmt->fetch()){
-        // FIXED: Use absolute path from web root
-        $fileLink = $m['file_path']
-            ? '<a href="/accendo_2nd/'.htmlspecialchars($m['file_path']).'" target="_blank" class="btn-sm btn-view">View</a>'
-            : '<span style="color:#6b7280">—</span>';
+    <?php if (isset($_GET['deleted'])): ?>
+        <div class="alert-success">
+            Material deleted successfully.
+        </div>
+    <?php endif; ?>
 
-        $uploadedDate = !empty($m['uploaded_at'])
-            ? date('M j, Y g:i A', strtotime($m['uploaded_at']))
-            : '—';
+    <div class="card">
+        <?php
+        $stmt = $pdo->prepare("
+            SELECT m.id, m.title, m.description, s.name AS subject, m.file_path, m.uploaded_at
+            FROM materials m
+            JOIN subjects s ON m.subject_id = s.id
+            WHERE m.teacher_id = ?
+            ORDER BY m.uploaded_at DESC
+        ");
+        $stmt->execute([$_SESSION['user_id']]);
+        $materials = $stmt->fetchAll();
 
-        $description = !empty($m['description']) ? htmlspecialchars($m['description']) : '—';
+        if (empty($materials)): ?>
+            <p style="text-align:center; color:var(--text-light); padding:60px 20px; font-size:1.1rem;">
+                No materials uploaded yet.<br>
+                Start sharing resources with your students!
+            </p>
+        <?php else: ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Subject</th>
+                        <th>File</th>
+                        <th>Uploaded</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($materials as $m):
+                        $fileLink = $m['file_path']
+                            ? '<a href="/accendo_2nd/'.htmlspecialchars($m['file_path']).'" target="_blank" class="btn-sm btn-view">View File</a>'
+                            : '<span style="color:var(--text-light)">—</span>';
 
-        echo "<tr>
-                <td>" . htmlspecialchars($m['title']) . "</td>
-                <td>" . $description . "</td>
-                <td>" . htmlspecialchars($m['subject']) . "</td>
-                <td>$fileLink</td>
-                <td>$uploadedDate</td>
-                <td>
-                  <a href='api/delete_material.php?delete=" . urlencode($m['id']) . "' 
-                     class='btn-sm btn-danger' 
-                     onclick='return confirm(\"Delete this material? This cannot be undone.\")'>
-                     Delete
-                  </a>
-                </td>
-              </tr>";
-    }
-    ?>
-  </table>
+                        $description = $m['description'] ? htmlspecialchars($m['description']) : '<em style="color:var(--text-light)">No description</em>';
+
+                        $uploaded = $m['uploaded_at']
+                            ? date('M j, Y <br> g:i A', strtotime($m['uploaded_at']))
+                            : '—';
+                    ?>
+                        <tr>
+                            <td><strong><?= htmlspecialchars($m['title']) ?></strong></td>
+                            <td><?= $description ?></td>
+                            <td><span style="background:rgba(123,97,255,0.2); color:var(--primary); padding:4px 10px; border-radius:20px; font-size:0.85rem; font-weight:500;">
+                                <?= htmlspecialchars($m['subject']) ?>
+                            </span></td>
+                            <td><?= $fileLink ?></td>
+                            <td><small><?= $uploaded ?></small></td>
+                            <td>
+                                <a href="api/delete_material.php?delete=<?= urlencode($m['id']) ?>" 
+                                   class="btn-sm btn-danger"
+                                   onclick="return confirm('Delete this material permanently? This cannot be undone.')">
+                                   Delete
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+
 </div>
 
-<?php include 'includes/footer.php'; ?>
-<script src="../assets/js/global.js"></script>
+<!-- GLOBAL THEME SYNC - Same as exams.php & assignments.php -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const applyTheme = () => {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'light') {
+            document.body.classList.remove('dark-mode');
+        } else {
+            document.body.classList.add('dark-mode');
+        }
+    };
 
-</body>
-</html>
+    applyTheme();
+
+    // Listen for real-time theme changes from Settings page
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'theme') applyTheme();
+    });
+});
+</script>
+
+<?php include 'includes/footer.php'; ?>
