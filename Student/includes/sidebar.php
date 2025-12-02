@@ -59,6 +59,14 @@
             <span class="label">Logout</span>
         </a>
     </nav>
+
+    <!-- Voice Navigation Toggle -->
+    <div class="voice-toggle">
+        <button id="voice-mode-global-btn" class="voice-btn" title="Activate Voice Navigation">
+            <i class="fas fa-microphone"></i>
+            <span>Voice</span>
+        </button>
+    </div>
 </aside>
 
 <!-- Logout Confirmation Modal -->
@@ -228,6 +236,39 @@
     .logout-link:hover {
         background: rgba(239, 68, 68, 0.1) !important;
         color: var(--danger) !important;
+    }
+
+    /* Voice Toggle */
+    .voice-toggle {
+        margin-top: auto;
+        padding: 1rem 0;
+    }
+
+    .voice-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 10px;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        cursor: pointer;
+        font-weight: 500;
+        transition: var(--transition);
+        font-size: 0.9rem;
+        justify-content: center;
+    }
+
+    .voice-btn:hover {
+        background: rgba(59, 130, 246, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    }
+
+    .voice-btn i {
+        font-size: 16px;
     }
 
     /* Logout Modal */

@@ -8,6 +8,14 @@
         }
     </style>
 
+    <!-- Flag for visual impairment support -->
+    <script>
+        window.isVisuallyImpairedStudent = true;
+    </script>
+
+    <!-- Voice Navigation Script -->
+    <script src="assets/js/voice-navigation.js"></script>
+
     <script>
     (function(){
         const STORAGE_KEY = 'accendo_theme';
